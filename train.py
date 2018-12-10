@@ -4,6 +4,7 @@
 
 import pdb
 import argparse
+import sys
 import numpy as np
 from tqdm import tqdm
 
@@ -21,6 +22,14 @@ from util.cutout import Cutout
 
 from model.resnet import ResNet18
 from model.wide_resnet import WideResNet
+
+
+sys.path.insert(0, "/users/ahjiang/src/Cutout/pytorch-cifar")
+import main as sb
+import lib.loggers as loggers
+
+#trainer = sb.Trainer
+logger = loggers.Logger(1)
 
 model_options = ['resnet18', 'wideresnet']
 dataset_options = ['cifar10', 'cifar100', 'svhn']
