@@ -300,11 +300,11 @@ for epoch in range(args.epochs):
             pred = torch.max(pred.data, 1)[1]
             total += labels.size(0)
             correct += (pred == labels.data).sum().item()
-            accuracy = correct / total
+            accuracy = 100. * correct / total
 
             print("Epoch: {} Acc: {:.2f} Loss: {:.2f}".format(epoch,
-                                                                accuracy,
-                                                                xentropy_loss_avg))
+                                                              accuracy,
+                                                              xentropy_loss_avg))
 
             #progress_bar.set_postfix(
             #    xentropy='%.3f' % (xentropy_loss_avg / (i + 1)),
