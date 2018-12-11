@@ -194,7 +194,38 @@ csv_logger = CSVLogger(args=args, fieldnames=['epoch', 'train_acc', 'test_acc'],
 
 sb = SelectiveBackpropper(cnn, cnn_optimizer, args.sampling_min, args.batch_size, num_classes)
 
-def test(loader, epoch, num_images, sb):
+def test_sb(loader, epoch, sb):
+    cnn.eval()    # Change model to 'eval' mode (BN uses moving mean/var).
+    correct = 0.
+    total = 0.
+    test_loss = 0.
+    for images, labels, ids in loader:
+        images = images.cuda()
+        labels = labels.cuda()
+
+        with torch.no_grad():
+            pred = cnn(images)
+            loss = nn.CrossEntropyLoss()(pred, labels)
+            test_loss += loss.item()
+
+        pred = torch.max(pred.data, 1)[1]
+        total += labels.size(0)
+        correct += (pred == labels).sum().item()
+
+    test_loss /= total
+    val_acc = correct / total
+
+    print('test_debug,{},{},{},{:.6f},{:.6f},{}'.format(
+                epoch,
+                sb.logger.global_num_backpropped,
+                sb.logger.global_num_skipped,
+                test_loss,
+                100.*val_acc,
+                time.time()))
+    cnn.train()
+    return val_acc
+
+def test(loader, epoch, num_images):
     cnn.eval()    # Change model to 'eval' mode (BN uses moving mean/var).
     correct = 0.
     total = 0.
@@ -215,22 +246,13 @@ def test(loader, epoch, num_images, sb):
     test_loss /= total
     val_acc = correct / total
 
-    if sb:
-        print('test_debug,{},{},{},{:.6f},{:.6f},{}'.format(
-                    epoch,
-                    sb.logger.global_num_backpropped,
-                    sb.logger.global_num_skipped,
-                    test_loss,
-                    100.*val_acc,
-                    time.time()))
-    else:
-        print('test_debug,{},{},{},{:.6f},{:.6f},{}'.format(
-                    epoch,
-                    epoch * num_images,
-                    0,
-                    test_loss,
-                    100.*val_acc,
-                    time.time()))
+    print('test_debug,{},{},{},{:.6f},{:.6f},{}'.format(
+                epoch,
+                epoch * num_images,
+                0,
+                test_loss,
+                100.*val_acc,
+                time.time()))
 
     cnn.train()
     return val_acc
@@ -251,7 +273,7 @@ for epoch in range(args.epochs):
 
         sb.next_epoch()
         sb.next_partition()
-        test_acc = test(test_loader, epoch, len(train_loader), sb)
+        test_acc = test_sb(test_loader, epoch, sb)
 
     else:
         xentropy_loss_avg = 0.
@@ -284,7 +306,7 @@ for epoch in range(args.epochs):
                 xentropy='%.3f' % (xentropy_loss_avg / (i + 1)),
                 acc='%.3f' % accuracy)
 
-        test_acc = test(test_loader, epoch, len(train_loader), None)
+        test_acc = test(test_loader, epoch, len(train_loader.dataset), None)
         tqdm.write('test_acc: %.3f' % (test_acc))
         scheduler.step(epoch)
         row = {'epoch': str(epoch), 'train_acc': str(accuracy), 'test_acc': str(test_acc)}
