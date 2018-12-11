@@ -5,6 +5,7 @@
 import pdb
 import argparse
 import sys
+import time
 import numpy as np
 from tqdm import tqdm
 
@@ -25,11 +26,9 @@ from model.wide_resnet import WideResNet
 
 
 sys.path.insert(0, "/users/ahjiang/src/Cutout/pytorch-cifar")
-import main as sb
-import lib.loggers as loggers
-
-#trainer = sb.Trainer
-logger = loggers.Logger(1)
+from lib.SelectiveBackpropper import SelectiveBackpropper
+#import main as sb
+import lib.cifar
 
 model_options = ['resnet18', 'wideresnet']
 dataset_options = ['cifar10', 'cifar100', 'svhn']
@@ -57,6 +56,9 @@ parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
 parser.add_argument('--seed', type=int, default=0,
                     help='random seed (default: 1)')
+
+parser.add_argument('--sampling_min', type=float, default=1,
+                    help='sampling min for SB')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -94,23 +96,23 @@ test_transform = transforms.Compose([
 
 if args.dataset == 'cifar10':
     num_classes = 10
-    train_dataset = datasets.CIFAR10(root='data/',
+    train_dataset = lib.cifar.CIFAR10(root='data/',
                                      train=True,
                                      transform=train_transform,
                                      download=True)
 
-    test_dataset = datasets.CIFAR10(root='data/',
+    test_dataset = lib.cifar.CIFAR10(root='data/',
                                     train=False,
                                     transform=test_transform,
                                     download=True)
 elif args.dataset == 'cifar100':
     num_classes = 100
-    train_dataset = datasets.CIFAR100(root='data/',
+    train_dataset = lib.cifar.CIFAR100(root='data/',
                                       train=True,
                                       transform=train_transform,
                                       download=True)
 
-    test_dataset = datasets.CIFAR100(root='data/',
+    test_dataset = lib.cifar.CIFAR100(root='data/',
                                      train=False,
                                      transform=test_transform,
                                      download=True)
@@ -170,32 +172,61 @@ if args.dataset == 'svhn':
 else:
     scheduler = MultiStepLR(cnn_optimizer, milestones=[60, 120, 160], gamma=0.2)
 
-filename = 'logs/' + test_id + '.csv'
+filename = '/tmp/logs/' + test_id + '.csv'
 csv_logger = CSVLogger(args=args, fieldnames=['epoch', 'train_acc', 'test_acc'], filename=filename)
 
+sb = SelectiveBackpropper(cnn, cnn_optimizer, args.sampling_min, args.batch_size, num_classes)
 
-def test(loader):
+def test(loader, epoch, sb):
     cnn.eval()    # Change model to 'eval' mode (BN uses moving mean/var).
     correct = 0.
     total = 0.
+    test_loss = 0.
     for images, labels in loader:
         images = images.cuda()
         labels = labels.cuda()
 
         with torch.no_grad():
             pred = cnn(images)
+            loss = nn.CrossEntropyLoss()(pred, labels)
+            test_loss += loss.item()
 
         pred = torch.max(pred.data, 1)[1]
         total += labels.size(0)
         correct += (pred == labels).sum().item()
 
+    test_loss /= total
     val_acc = correct / total
+
+    print('test_debug,{},{},{},{:.6f},{:.6f},{}'.format(
+                epoch,
+                sb.logger.global_num_backpropped,
+                sb.logger.global_num_skipped,
+                test_loss,
+                100.*val_acc,
+                time.time()))
+
+
     cnn.train()
     return val_acc
 
 
+stopped = False 
+
 for epoch in range(args.epochs):
 
+    if stopped: break
+
+    sb.trainer.train(train_loader)
+
+    if sb.trainer.stopped:
+        stopped = True
+        break
+
+    sb.next_epoch()
+    sb.next_partition()
+
+    '''
     xentropy_loss_avg = 0.
     correct = 0.
     total = 0.
@@ -225,8 +256,9 @@ for epoch in range(args.epochs):
         progress_bar.set_postfix(
             xentropy='%.3f' % (xentropy_loss_avg / (i + 1)),
             acc='%.3f' % accuracy)
+    '''
 
-    test_acc = test(test_loader)
+    test_acc = test(test_loader, epoch, sb)
     tqdm.write('test_acc: %.3f' % (test_acc))
 
     scheduler.step(epoch)
