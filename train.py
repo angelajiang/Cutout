@@ -73,13 +73,14 @@ torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
-test_id = args.dataset + '_' + args.model
 
 print(args)
 
+test_id = args.dataset + '_' + args.model
+
 # Prepare selective backprop things
 if args.sb:
-    filename = args.output_dir + "/" + test_id + '_sb.csv'
+    filename = args.output_dir + "/" + test_id + '_' + str(args.sampling_min) + '_sb.csv'
     dataset_lib = lib.cifar
 else:
     filename = args.output_dir + "/" + test_id + '.csv'
