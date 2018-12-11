@@ -302,7 +302,7 @@ for epoch in range(args.epochs):
             correct += (pred == labels.data).sum().item()
             accuracy = 100. * correct / total
 
-            print("Epoch: {} Acc: {:.2f} Loss: {:.2f}".format(epoch,
+            print("Epoch: {} Acc: {:.3f} Loss: {:.3f}".format(epoch,
                                                               accuracy,
                                                               xentropy_loss_avg))
 
@@ -310,7 +310,7 @@ for epoch in range(args.epochs):
             #    xentropy='%.3f' % (xentropy_loss_avg / (i + 1)),
             #    acc='%.3f' % accuracy)
 
-        test_acc = test(test_loader, epoch, len(train_loader.dataset), None)
+        test_acc = test(test_loader, epoch, len(train_loader.dataset))
         #tqdm.write('test_acc: %.3f' % (test_acc))
         scheduler.step(epoch)
         row = {'epoch': str(epoch), 'train_acc': str(accuracy), 'test_acc': str(test_acc)}
