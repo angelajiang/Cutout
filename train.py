@@ -223,7 +223,7 @@ def test_sb(loader, epoch, sb):
                 100.*val_acc,
                 time.time()))
     cnn.train()
-    return val_acc
+    return 100. * val_acc
 
 def test(loader, epoch, num_images):
     cnn.eval()    # Change model to 'eval' mode (BN uses moving mean/var).
@@ -255,7 +255,7 @@ def test(loader, epoch, num_images):
                 time.time()))
 
     cnn.train()
-    return val_acc
+    return 100. * val_acc
 
 
 stopped = False 
