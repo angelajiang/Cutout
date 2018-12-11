@@ -8,7 +8,7 @@ ulimit -a
 
 EXP_PREFIX=$expname
 NET="wideresnet"
-BATCH_SIZE=128
+BATCH_SIZE=64
 DECAY=0.0005
 SEED=1337
 NUM_TRIALS=1
