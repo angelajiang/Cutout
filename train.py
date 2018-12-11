@@ -280,9 +280,9 @@ for epoch in range(args.epochs):
         correct = 0.
         total = 0.
 
-        progress_bar = tqdm(train_loader)
-        for i, (images, labels) in enumerate(progress_bar):
-            progress_bar.set_description('Epoch ' + str(epoch))
+        #progress_bar = tqdm(train_loader)
+        for i, (images, labels) in enumerate(train_loader):
+            #progress_bar.set_description('Epoch ' + str(epoch))
 
             images = images.cuda()
             labels = labels.cuda()
@@ -302,12 +302,16 @@ for epoch in range(args.epochs):
             correct += (pred == labels.data).sum().item()
             accuracy = correct / total
 
-            progress_bar.set_postfix(
-                xentropy='%.3f' % (xentropy_loss_avg / (i + 1)),
-                acc='%.3f' % accuracy)
+            print("Epoch: {} Acc: {:.2f} Loss: {:.2f}".format(epoch,
+                                                                accuracy,
+                                                                xentropy_loss_avg))
+
+            #progress_bar.set_postfix(
+            #    xentropy='%.3f' % (xentropy_loss_avg / (i + 1)),
+            #    acc='%.3f' % accuracy)
 
         test_acc = test(test_loader, epoch, len(train_loader.dataset), None)
-        tqdm.write('test_acc: %.3f' % (test_acc))
+        #tqdm.write('test_acc: %.3f' % (test_acc))
         scheduler.step(epoch)
         row = {'epoch': str(epoch), 'train_acc': str(accuracy), 'test_acc': str(test_acc)}
         csv_logger.writerow(row)
