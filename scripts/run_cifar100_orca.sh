@@ -37,5 +37,5 @@ do
      --length=8 \
      --output_dir=$OUTPUT_DIR \
      --sb \
-     --sampling_min=1 &> $OUTPUT_DIR/$OUTPUT_FILE
+     --sampling_min=$SAMPLING_MIN &> $OUTPUT_DIR/$OUTPUT_FILE
 done
