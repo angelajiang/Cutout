@@ -14,8 +14,8 @@ NUM_TRIALS=1
 
 EXP_NAME=$EXP_PREFIX
 
-mkdir "/proj/BigLearning/ahjiang/output/cifar100/"
-OUTPUT_DIR="/proj/BigLearning/ahjiang/output/cifar100/"$EXP_NAME
+mkdir "/datasets/BigLearning/ahjiang/output/cifar100/"
+OUTPUT_DIR="/datasets/BigLearning/ahjiang/output/cifar100/"$EXP_NAME
 mkdir $OUTPUT_DIR
 
 for i in `seq 1 $NUM_TRIALS`
