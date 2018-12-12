@@ -1,5 +1,6 @@
 expname=$1
 SAMPLING_MIN=$2
+LR=$3
 
 set -x
 
@@ -22,8 +23,7 @@ mkdir $OUTPUT_DIR
 for i in `seq 1 $NUM_TRIALS`
 do
 
-  OUTPUT_FILE="deterministic_cifar100_"$NET"_"$SAMPLING_MIN"_"$BATCH_SIZE"_0.1_"$DECAY"_trial"$i"_seed"$SEED"_v2"
-  PICKLE_PREFIX="deterministic_cifar100_"$NET"_"$SAMPLING_MIN"_"$BATCH_SIZE"_0._"$DECAY"_trial"$i"_seed"$SEED
+  OUTPUT_FILE="deterministic_cifar100_"$NET"_"$SAMPLING_MIN"_"$BATCH_SIZE"_0.0_"$DECAY"_trial"$i"_seed"$SEED"_v2"
 
   echo $OUTPUT_DIR/$OUTPUT_FILE
 
@@ -37,5 +37,6 @@ do
      --length=8 \
      --output_dir=$OUTPUT_DIR \
      --sb \
+     --lr_sched=$LR \
      --sampling_min=$SAMPLING_MIN &> $OUTPUT_DIR/$OUTPUT_FILE
 done

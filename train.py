@@ -62,6 +62,8 @@ parser.add_argument('--output_dir', default="./logs",
 
 parser.add_argument('--sampling_min', type=float, default=1,
                     help='sampling min for SB')
+parser.add_argument('--lr_sched', default=None,
+                    help='path to file with manual lr schedule')
 parser.add_argument('--sb', action='store_true', default=False,
                     help='apply selective backprop')
 
@@ -192,7 +194,7 @@ if not os.path.exists(args.output_dir):
 
 csv_logger = CSVLogger(args=args, fieldnames=['epoch', 'train_acc', 'test_acc'], filename=filename)
 
-sb = SelectiveBackpropper(cnn, cnn_optimizer, args.sampling_min, args.batch_size, num_classes)
+sb = SelectiveBackpropper(cnn, cnn_optimizer, args.sampling_min, args.batch_size, args.lr_sched, num_classes)
 
 def test_sb(loader, epoch, sb):
     cnn.eval()    # Change model to 'eval' mode (BN uses moving mean/var).
