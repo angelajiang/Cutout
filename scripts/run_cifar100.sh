@@ -27,7 +27,7 @@ do
 
   echo $OUTPUT_DIR/$OUTPUT_FILE
 
-   python -u train.py \
+  time python -u train.py \
      --seed=$SEED \
      --batch_size=$BATCH_SIZE \
      --dataset=cifar100 \
@@ -35,6 +35,7 @@ do
      --data_augmentation \
      --cutout \
      --length=8 \
+     --epochs=2000 \
      --output_dir=$OUTPUT_DIR \
      --sb \
      --lr_sched=$LR \
