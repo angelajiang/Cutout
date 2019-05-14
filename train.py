@@ -66,6 +66,8 @@ parser.add_argument('--lr_sched', default=None,
                     help='path to file with manual lr schedule')
 parser.add_argument('--sb', action='store_true', default=False,
                     help='apply selective backprop')
+parser.add_argument('--forwardlr', dest='forwardlr', action='store_true',
+                    help='LR schedule based on forward passes')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -194,7 +196,7 @@ if not os.path.exists(args.output_dir):
 
 csv_logger = CSVLogger(args=args, fieldnames=['epoch', 'train_acc', 'test_acc'], filename=filename)
 
-sb = SelectiveBackpropper(cnn, cnn_optimizer, args.sampling_min, args.batch_size, args.lr_sched, num_classes)
+sb = SelectiveBackpropper(cnn, cnn_optimizer, args.sampling_min, args.batch_size, args.lr_sched, num_classes, args.forwardlr)
 
 def test_sb(loader, epoch, sb):
     cnn.eval()    # Change model to 'eval' mode (BN uses moving mean/var).
