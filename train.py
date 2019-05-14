@@ -194,7 +194,7 @@ else:
 if not os.path.exists(args.output_dir):
     os.makedirs(args.output_dir)
 
-csv_logger = CSVLogger(args=args, fieldnames=['epoch', 'train_acc', 'test_acc'], filename=filename)
+#csv_logger = CSVLogger(args=args, fieldnames=['epoch', 'train_acc', 'test_acc'], filename=filename)
 
 sb = SelectiveBackpropper(cnn, cnn_optimizer, args.sampling_min, args.batch_size, args.lr_sched, num_classes, args.forwardlr)
 
@@ -318,7 +318,7 @@ for epoch in range(args.epochs):
         #tqdm.write('test_acc: %.3f' % (test_acc))
         scheduler.step(epoch)
         row = {'epoch': str(epoch), 'train_acc': str(accuracy), 'test_acc': str(test_acc)}
-        csv_logger.writerow(row)
+        #csv_logger.writerow(row)
 
 torch.save(cnn.state_dict(), 'checkpoints/' + test_id + '.pt')
-csv_logger.close()
+#csv_logger.close()
