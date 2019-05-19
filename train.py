@@ -196,7 +196,13 @@ if not os.path.exists(args.output_dir):
 
 #csv_logger = CSVLogger(args=args, fieldnames=['epoch', 'train_acc', 'test_acc'], filename=filename)
 
-sb = SelectiveBackpropper(cnn, cnn_optimizer, args.sampling_min, args.batch_size, args.lr_sched, num_classes, args.forwardlr)
+sb = SelectiveBackpropper(cnn,
+                          cnn_optimizer,
+                          args.sampling_min,
+                          args.batch_size,
+                          args.lr_sched,
+                          num_classes,
+                          args.forwardlr)
 
 def test_sb(loader, epoch, sb):
     cnn.eval()    # Change model to 'eval' mode (BN uses moving mean/var).
