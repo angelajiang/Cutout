@@ -1,7 +1,7 @@
 expname=$1
-SAMPLING_MIN=$2
-LR=$3
+LR=$2
 
+SAMPLING_MIN=0
 
 set -x
 
