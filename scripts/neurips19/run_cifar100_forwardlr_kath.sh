@@ -11,6 +11,7 @@ ulimit -a
 EXP_PREFIX=$expname
 NET="wideresnet"
 BATCH_SIZE=64
+POOL_SIZE=256
 DECAY=0.0005
 SEED=1337
 NUM_TRIALS=1
@@ -26,7 +27,7 @@ mkdir $OUTPUT_DIR
 for i in `seq 1 $NUM_TRIALS`
 do
 
-  OUTPUT_FILE="sampling_cifar100_"$NET"_"$SAMPLING_MIN"_"$BATCH_SIZE"_0.0_"$DECAY"_trial"$i"_seed"$SEED"_v2"
+  OUTPUT_FILE="kath-biased_cifar100_"$NET"_"$SAMPLING_MIN"_"$BATCH_SIZE"_"$POOL_SIZE"_"$DECAY"_trial"$i"_seed"$SEED"_v2"
 
   echo $OUTPUT_DIR/$OUTPUT_FILE
 
