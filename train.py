@@ -68,6 +68,8 @@ parser.add_argument('--sb', action='store_true', default=False,
                     help='apply selective backprop')
 parser.add_argument('--forwardlr', dest='forwardlr', action='store_true',
                     help='LR schedule based on forward passes')
+parser.add_argument('--kath', dest='kath', action='store_true',
+                    help='Traing using kath18')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -202,7 +204,8 @@ sb = SelectiveBackpropper(cnn,
                           args.batch_size,
                           args.lr_sched,
                           num_classes,
-                          args.forwardlr)
+                          args.forwardlr,
+                          args.kath)
 
 def test_sb(loader, epoch, sb):
     cnn.eval()    # Change model to 'eval' mode (BN uses moving mean/var).
