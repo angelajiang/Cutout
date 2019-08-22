@@ -1,0 +1,202 @@
+import argparse
+import json
+import os
+import subprocess
+
+
+def set_experiment_default_args(parser):
+    parser.add_argument('--expname', '-e', default="tmp", type=str, help='experiment name')
+    parser.add_argument('--strategy', '-s', default="nofilter", type=str, help='nofilter, sb, kath')
+    parser.add_argument('--dataset', '-d', default="cifar10", type=str, choices=['svhn', 'cifar10', 'cifar100'])
+    parser.add_argument('--profile', dest='profile', action='store_true',
+                        help='turn profiling on')
+    parser.add_argument('--num-trials', default=1, type=int, help='number of trials')
+    parser.add_argument('--src-dir', default="./", type=str, help='/path/to/pytorch-cifar')
+    parser.add_argument('--dst-dir', default="/proj/BigLearning/ahjiang/output/", type=str, help='/path/to/dst/dir')
+    return parser
+
+class Seeder():
+    def __init__(self):
+        self.seed = 1336
+
+    def get_seed(self):
+        self.seed += 1
+        return self.seed
+
+def get_sampling_min():
+    return 0
+
+def get_decay():
+    return 0.0005
+
+def get_max_history_length():
+    return 1024
+
+def get_batch_size():
+    return 128
+
+def get_kath_strategy():
+    return "biased"
+
+def get_num_epochs(dataset):
+    if dataset == "svhn":
+        return 160
+    else:
+        return 200
+
+def get_learning_rate(dataset):
+    if dataset == "svhn":
+        return 0.01
+    else:
+        return 0.1
+
+def get_length(dataset):
+    if dataset == "cifar10":
+        return 16
+    elif dataset == "cifar100":
+        return 8
+    elif dataset == "svhn":
+        return 20
+
+def get_sample_size(batch_size):
+    return batch_size * 4
+
+def get_selector(strategy):
+    if strategy == "sb":
+        return 'sampling'
+    elif strategy == "nofilter":
+        return 'nofilter'
+    elif strategy == "kath":
+        return 'kath'
+    else:
+        print("Strategy cannot be {}".format(strategy))
+        exit()
+
+def get_model():
+    return "wideresnet"
+
+def get_output_dirs(dst_dir):
+    pickles_dir = os.path.join(dst_dir, "pickles")
+    if not os.path.exists(dst_dir):
+        os.mkdir(dst_dir)
+    if not os.path.exists(pickles_dir):
+        os.mkdir(pickles_dir)
+    return dst_dir, pickles_dir
+
+def get_output_files(sb_selector,
+                     dataset,
+                     net,
+                     sampling_min,
+                     batch_size,
+                     max_history_length,
+                     decay,
+                     trial,
+                     seed,
+                     strategy,
+                     kath_strategy,
+                     static_sample_size):
+
+    if strategy == "kath":
+        sb_selector = "kath-{}".format(kath_strategy)
+        max_history_length = static_sample_size
+    if strategy == "nofilter":
+        sb_selector = "nofilter"
+    if sb_selector == "topk":
+        max_history_length = static_sample_size
+
+    output_file = "{}_{}_{}_{}_{}_{}_{}_trial{}_seed{}_v4".format(sb_selector,
+                                                                  dataset,
+                                                                  net,
+                                                                  sampling_min,
+                                                                  batch_size,
+                                                                  max_history_length,
+                                                                  decay,
+                                                                  trial,
+                                                                  seed)
+
+    pickle_file = "{}_{}_{}_{}_{}_{}_{}_trial{}_seed{}".format(sb_selector,
+                                                               dataset,
+                                                               net,
+                                                               sampling_min,
+                                                               batch_size,
+                                                               max_history_length,
+                                                               decay,
+                                                               trial,
+                                                               seed)
+    return output_file, pickle_file
+
+def get_experiment_dirs(dst_dir, dataset, expname):
+    output_dir = os.path.join(dst_dir, dataset, expname)
+    pickles_dir = os.path.join(output_dir, "pickles")
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+    if not os.path.exists(pickles_dir):
+        os.mkdir(pickles_dir)
+    return output_dir, pickles_dir
+
+def main(args):
+    seeder = Seeder()
+    src_dir = os.path.abspath(args.src_dir)
+    sampling_min = get_sampling_min()
+    decay = get_decay()
+    batch_size = get_batch_size()
+    static_sample_size = get_sample_size(batch_size)
+    lr = get_learning_rate(args.dataset)
+    length = get_length(args.dataset)
+    model = get_model()
+    num_epochs = get_num_epochs(args.dataset)
+    kath_strategy = get_kath_strategy()
+    max_history_length = get_max_history_length()
+    selector_strategy = get_selector(args.strategy)
+    output_dir, pickles_dir = get_experiment_dirs(args.dst_dir, args.dataset, args.expname)
+    assert(args.strategy in ["nofilter", "sb", "kath"])
+
+    for trial in range(1, args.num_trials+1):
+        seed = seeder.get_seed()
+        output_file, pickle_file = get_output_files(selector_strategy,
+                                                    args.dataset,
+                                                    model,
+                                                    sampling_min,
+                                                    batch_size,
+                                                    max_history_length,
+                                                    decay,
+                                                    trial,
+                                                    seed,
+                                                    args.strategy,
+                                                    kath_strategy,
+                                                    static_sample_size)
+        if args.profile:
+            cmd = "python -m cProfile -o profs/{}.prof train.py ".format(args.expname)
+        else:
+            cmd = "python train.py "
+        cmd += "--dataset={} ".format(args.dataset)
+        cmd += "--model={} ".format(model)
+        cmd += "--learning_rate={} ".format(lr)
+        cmd += "--length={} ".format(length)
+        cmd += "--epochs={} ".format(num_epochs)
+        cmd += "--data_augmentation "
+        cmd += "--cutout "
+        cmd += "--sb "
+        cmd += "--strategy={} ".format(args.strategy)
+
+        cmd = cmd.strip()
+
+        output_path = os.path.join(output_dir, output_file)
+        print("========================================================================")
+        print(cmd)
+        print("------------------------------------------------------------------------")
+        print(output_path)
+
+        with open(os.path.join(pickles_dir, output_file) + "_cmd", "w+") as f:
+            f.write(cmd)
+
+        cmd_list = cmd.split(" ")
+        with open(output_path, "w+") as f:
+            subprocess.call(cmd_list, stdout=f)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
+    parser = set_experiment_default_args(parser)
+    args = parser.parse_args()
+    main(args)
