@@ -30,8 +30,13 @@ sys.path.insert(0, "/users/ahjiang/src/Cutout/pytorch-cifar")
 from lib.SelectiveBackpropper import SelectiveBackpropper
 #import main as sb
 import lib.cifar
+import lib.datasets
+import lib.svhn
+
+start_time_seconds = time.time()
 
 model_options = ['resnet18', 'wideresnet']
+strategy_options = ['nofilter', 'sb', 'kath']
 dataset_options = ['cifar10', 'cifar100', 'svhn']
 
 parser = argparse.ArgumentParser(description='CNN')
@@ -60,7 +65,7 @@ parser.add_argument('--seed', type=int, default=0,
 parser.add_argument('--output_dir', default="./logs",
                     help='directory to place logs')
 
-parser.add_argument('--sampling_min', type=float, default=1,
+parser.add_argument('--sampling_min', type=float, default=0,
                     help='sampling min for SB')
 parser.add_argument('--lr_sched', default=None,
                     help='path to file with manual lr schedule')
@@ -68,8 +73,7 @@ parser.add_argument('--sb', action='store_true', default=False,
                     help='apply selective backprop')
 parser.add_argument('--forwardlr', dest='forwardlr', action='store_true',
                     help='LR schedule based on forward passes')
-parser.add_argument('--kath', dest='kath', action='store_true',
-                    help='Traing using kath18')
+parser.add_argument('--strategy', default='nofilter', choices=strategy_options)
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -87,7 +91,14 @@ test_id = args.dataset + '_' + args.model
 # Prepare selective backprop things
 if args.sb:
     filename = args.output_dir + "/" + test_id + '_' + str(args.sampling_min) + '_sb.csv'
-    dataset_lib = lib.cifar
+    if args.dataset == 'cifar10' or args.dataset == 'cifar100':
+        dataset_lib = lib.cifar
+    elif args.dataset == 'svhn':
+        dataset_lib = lib.svhn
+    else:
+        print("{} dataset not supported with SB".format(args.dataset))
+        exit()
+
 else:
     filename = args.output_dir + "/" + test_id + '.csv'
     dataset_lib = datasets
@@ -118,9 +129,9 @@ test_transform = transforms.Compose([
 if args.dataset == 'cifar10':
     num_classes = 10
     train_dataset = dataset_lib.CIFAR10(root='data/',
-                                     train=True,
-                                     transform=train_transform,
-                                     download=True)
+                                        train=True,
+                                        transform=train_transform,
+                                        download=True)
 
     test_dataset = dataset_lib.CIFAR10(root='data/',
                                     train=False,
@@ -204,8 +215,9 @@ sb = SelectiveBackpropper(cnn,
                           args.batch_size,
                           args.lr_sched,
                           num_classes,
+                          len(train_dataset),
                           args.forwardlr,
-                          args.kath)
+                          args.strategy)
 
 def test_sb(loader, epoch, sb):
     cnn.eval()    # Change model to 'eval' mode (BN uses moving mean/var).
@@ -228,13 +240,14 @@ def test_sb(loader, epoch, sb):
     test_loss /= total
     val_acc = correct / total
 
-    print('test_debug,{},{},{},{:.6f},{:.6f},{}'.format(
+    print('test_debug,{},{},{},{:.6f},{:.6f},{},{}'.format(
                 epoch,
                 sb.logger.global_num_backpropped,
                 sb.logger.global_num_skipped,
                 test_loss,
                 100.*val_acc,
-                time.time()))
+                0,
+                time.time() - start_time_seconds))
     cnn.train()
     return 100. * val_acc
 
