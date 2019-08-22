@@ -46,9 +46,11 @@ def get_num_epochs(dataset):
 
 def get_learning_rate(dataset):
     if dataset == "svhn":
-        return 0.01
-    else:
-        return 0.1
+        return "data/config/sysml20/lr-sched-svhn-wideresnet"
+    elif dataset == "cifar10":
+        return "data/config/sysml20/lr-sched-cifar10-wideresnet"
+    elif dataset == "cifar100":
+        return "data/config/sysml20/lr-sched-cifar100-wideresnet"
 
 def get_length(dataset):
     if dataset == "cifar10":
@@ -141,7 +143,7 @@ def main(args):
     decay = get_decay()
     batch_size = get_batch_size()
     static_sample_size = get_sample_size(batch_size)
-    lr = get_learning_rate(args.dataset)
+    lr_file = get_learning_rate(args.dataset)
     length = get_length(args.dataset)
     model = get_model()
     num_epochs = get_num_epochs(args.dataset)
@@ -169,15 +171,17 @@ def main(args):
             cmd = "python -m cProfile -o profs/{}.prof train.py ".format(args.expname)
         else:
             cmd = "python train.py "
-        cmd += "--dataset={} ".format(args.dataset)
-        cmd += "--model={} ".format(model)
-        cmd += "--learning_rate={} ".format(lr)
-        cmd += "--length={} ".format(length)
-        cmd += "--epochs={} ".format(num_epochs)
-        cmd += "--data_augmentation "
+        if args.dataset in ["cifar10", "cifar100"]:
+            cmd += "--data_augmentation "
+        cmd += "--dataset {} ".format(args.dataset)
+        cmd += "--model {} ".format(model)
+        cmd += "--lr_sched {} ".format(lr_file)
+        cmd += "--length {} ".format(length)
+        cmd += "--epochs {} ".format(num_epochs)
         cmd += "--cutout "
+        cmd += "--forwardlr "
         cmd += "--sb "
-        cmd += "--strategy={} ".format(args.strategy)
+        cmd += "--strategy {} ".format(args.strategy)
 
         cmd = cmd.strip()
 
