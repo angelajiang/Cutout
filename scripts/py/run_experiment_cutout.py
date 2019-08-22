@@ -38,7 +38,9 @@ def get_batch_size():
 def get_kath_strategy():
     return "biased"
 
-def get_num_epochs(dataset):
+def get_num_epochs(dataset, profile):
+    if profile:
+        return 25
     if dataset == "svhn":
         return 160
     else:
@@ -46,11 +48,11 @@ def get_num_epochs(dataset):
 
 def get_learning_rate(dataset):
     if dataset == "svhn":
-        return "data/config/sysml20/lr-sched-svhn-wideresnet"
+        return "data/config/sysml20/lr_sched_svhn_wideresnet"
     elif dataset == "cifar10":
-        return "data/config/sysml20/lr-sched-cifar10-wideresnet"
+        return "data/config/sysml20/lr_sched_cifar10_wideresnet"
     elif dataset == "cifar100":
-        return "data/config/sysml20/lr-sched-cifar100-wideresnet"
+        return "data/config/sysml20/lr_sched_cifar100_wideresnet"
 
 def get_length(dataset):
     if dataset == "cifar10":
@@ -146,7 +148,7 @@ def main(args):
     lr_file = get_learning_rate(args.dataset)
     length = get_length(args.dataset)
     model = get_model()
-    num_epochs = get_num_epochs(args.dataset)
+    num_epochs = get_num_epochs(args.dataset, args.profile)
     kath_strategy = get_kath_strategy()
     max_history_length = get_max_history_length()
     selector_strategy = get_selector(args.strategy)
@@ -168,7 +170,7 @@ def main(args):
                                                     kath_strategy,
                                                     static_sample_size)
         if args.profile:
-            cmd = "python -m cProfile -o profs/{}.prof train.py ".format(args.expname)
+            cmd = "python -m cProfile -o {}/{}.prof train.py ".format(output_dir, args.expname)
         else:
             cmd = "python train.py "
         if args.dataset in ["cifar10", "cifar100"]:
