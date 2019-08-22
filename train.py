@@ -44,7 +44,7 @@ parser.add_argument('--dataset', '-d', default='cifar10',
                     choices=dataset_options)
 parser.add_argument('--model', '-a', default='resnet18',
                     choices=model_options)
-parser.add_argument('--batch_size', type=int, default=128,
+parser.add_argument('--batch_size', type=int, default=64,
                     help='input batch size for training (default: 128)')
 parser.add_argument('--epochs', type=int, default=200,
                     help='number of epochs to train (default: 20)')
@@ -166,10 +166,10 @@ elif args.dataset == 'svhn':
     train_dataset.data = data
     train_dataset.labels = labels
 
-    test_dataset = datasets.SVHN(root='data/',
-                                 split='test',
-                                 transform=test_transform,
-                                 download=True)
+    test_dataset = dataset_lib.SVHN(root='data/',
+                                    split='test',
+                                    transform=test_transform,
+                                    download=True)
 
 # Data Loader (Input Pipeline)
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
