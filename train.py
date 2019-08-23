@@ -44,7 +44,7 @@ parser.add_argument('--dataset', '-d', default='cifar10',
                     choices=dataset_options)
 parser.add_argument('--model', '-a', default='resnet18',
                     choices=model_options)
-parser.add_argument('--batch_size', type=int, default=64,
+parser.add_argument('--batch_size', type=int, default=128,
                     help='input batch size for training (default: 128)')
 parser.add_argument('--epochs', type=int, default=200,
                     help='number of epochs to train (default: 20)')
