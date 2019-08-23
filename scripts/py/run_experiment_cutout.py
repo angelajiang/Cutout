@@ -9,6 +9,7 @@ def set_experiment_default_args(parser):
     parser.add_argument('--strategy', '-s', default="nofilter", type=str, help='nofilter, sb, kath')
     parser.add_argument('--calculator', '-c', default="relative", type=str, help='relative, random')
     parser.add_argument('--dataset', '-d', default="cifar10", type=str, choices=['svhn', 'cifar10', 'cifar100'])
+    parser.add_argument('--custom-lr', default=None, type=str)
     parser.add_argument('--profile', dest='profile', action='store_true',
                         help='turn profiling on')
     parser.add_argument('--num-trials', default=1, type=int, help='number of trials')
@@ -45,7 +46,10 @@ def get_num_epochs(dataset, profile):
     else:
         return 200
 
-def get_learning_rate(dataset):
+def get_learning_rate(dataset, custom_lr):
+    if custom_lr is not None:
+        return custom_lr
+
     if dataset == "svhn":
         return "data/config/sysml20/lr_sched_svhn_wideresnet"
     elif dataset == "cifar10":
@@ -135,7 +139,7 @@ def main(args):
     sampling_min = get_sampling_min()
     decay = get_decay()
     static_sample_size = get_sample_size(args.batch_size)
-    lr_file = get_learning_rate(args.dataset)
+    lr_file = get_learning_rate(args.dataset, args.custom_lr)
     length = get_length(args.dataset)
     model = get_model()
     num_epochs = get_num_epochs(args.dataset, args.profile)
