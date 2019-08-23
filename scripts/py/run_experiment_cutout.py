@@ -11,6 +11,7 @@ def set_experiment_default_args(parser):
     parser.add_argument('--profile', dest='profile', action='store_true',
                         help='turn profiling on')
     parser.add_argument('--num-trials', default=1, type=int, help='number of trials')
+    parser.add_argument('--batch-size', '-b', default=128, type=int, help='batch size')
     parser.add_argument('--src-dir', default="./", type=str, help='/path/to/pytorch-cifar')
     parser.add_argument('--dst-dir', default="/proj/BigLearning/ahjiang/output/", type=str, help='/path/to/dst/dir')
     return parser
@@ -31,9 +32,6 @@ def get_decay():
 
 def get_max_history_length():
     return 1024
-
-def get_batch_size():
-    return 128
 
 def get_kath_strategy():
     return "biased"
@@ -143,8 +141,7 @@ def main(args):
     src_dir = os.path.abspath(args.src_dir)
     sampling_min = get_sampling_min()
     decay = get_decay()
-    batch_size = get_batch_size()
-    static_sample_size = get_sample_size(batch_size)
+    static_sample_size = get_sample_size(args.batch_size)
     lr_file = get_learning_rate(args.dataset)
     length = get_length(args.dataset)
     model = get_model()
@@ -161,7 +158,7 @@ def main(args):
                                                     args.dataset,
                                                     model,
                                                     sampling_min,
-                                                    batch_size,
+                                                    args.batch_size,
                                                     max_history_length,
                                                     decay,
                                                     trial,
@@ -180,6 +177,7 @@ def main(args):
         cmd += "--lr_sched {} ".format(lr_file)
         cmd += "--length {} ".format(length)
         cmd += "--epochs {} ".format(num_epochs)
+        cmd += "--batch_size {} ".format(args.batch_size)
         cmd += "--cutout "
         cmd += "--forwardlr "
         cmd += "--sb "
