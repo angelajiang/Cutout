@@ -38,6 +38,7 @@ start_time_seconds = time.time()
 model_options = ['resnet18', 'wideresnet']
 strategy_options = ['nofilter', 'sb', 'kath']
 dataset_options = ['cifar10', 'cifar100', 'svhn']
+calculator_options = ['relative', 'random']
 
 parser = argparse.ArgumentParser(description='CNN')
 parser.add_argument('--dataset', '-d', default='cifar10',
@@ -74,6 +75,7 @@ parser.add_argument('--sb', action='store_true', default=False,
 parser.add_argument('--forwardlr', dest='forwardlr', action='store_true',
                     help='LR schedule based on forward passes')
 parser.add_argument('--strategy', default='nofilter', choices=strategy_options)
+parser.add_argument('--calculator', default='relative', choices=calculator_options)
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -217,7 +219,8 @@ sb = SelectiveBackpropper(cnn,
                           num_classes,
                           len(train_dataset),
                           args.forwardlr,
-                          args.strategy)
+                          args.strategy,
+                          args.calculator)
 
 def test_sb(loader, epoch, sb):
     cnn.eval()    # Change model to 'eval' mode (BN uses moving mean/var).

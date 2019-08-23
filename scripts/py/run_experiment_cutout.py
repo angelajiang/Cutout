@@ -7,6 +7,7 @@ import subprocess
 def set_experiment_default_args(parser):
     parser.add_argument('--expname', '-e', default="tmp", type=str, help='experiment name')
     parser.add_argument('--strategy', '-s', default="nofilter", type=str, help='nofilter, sb, kath')
+    parser.add_argument('--calculator', '-c', default="relative", type=str, help='relative, random')
     parser.add_argument('--dataset', '-d', default="cifar10", type=str, choices=['svhn', 'cifar10', 'cifar100'])
     parser.add_argument('--profile', dest='profile', action='store_true',
                         help='turn profiling on')
@@ -63,17 +64,6 @@ def get_length(dataset):
 def get_sample_size(batch_size):
     return batch_size * 4
 
-def get_selector(strategy):
-    if strategy == "sb":
-        return 'sampling'
-    elif strategy == "nofilter":
-        return 'nofilter'
-    elif strategy == "kath":
-        return 'kath'
-    else:
-        print("Strategy cannot be {}".format(strategy))
-        exit()
-
 def get_model():
     return "wideresnet"
 
@@ -85,7 +75,8 @@ def get_output_dirs(dst_dir):
         os.mkdir(pickles_dir)
     return dst_dir, pickles_dir
 
-def get_output_files(sb_selector,
+def get_output_files(strategy,
+                     calculator,
                      dataset,
                      net,
                      sampling_min,
@@ -94,19 +85,21 @@ def get_output_files(sb_selector,
                      decay,
                      trial,
                      seed,
-                     strategy,
                      kath_strategy,
                      static_sample_size):
 
     if strategy == "kath":
-        sb_selector = "kath-{}".format(kath_strategy)
+        identifier = "kath-{}".format(kath_strategy)
         max_history_length = static_sample_size
-    if strategy == "nofilter":
-        sb_selector = "nofilter"
-    if sb_selector == "topk":
+    elif strategy == "nofilter":
+        identifier = "nofilter"
+    elif strategy == "topk":
+        identifier = "topk"
         max_history_length = static_sample_size
+    elif strategy == "sb":
+        identifier = "sampling-{}".format(calculator)
 
-    output_file = "{}_{}_{}_{}_{}_{}_{}_trial{}_seed{}_v4".format(sb_selector,
+    output_file = "{}_{}_{}_{}_{}_{}_{}_trial{}_seed{}_v4".format(identifier,
                                                                   dataset,
                                                                   net,
                                                                   sampling_min,
@@ -116,7 +109,7 @@ def get_output_files(sb_selector,
                                                                   trial,
                                                                   seed)
 
-    pickle_file = "{}_{}_{}_{}_{}_{}_{}_trial{}_seed{}".format(sb_selector,
+    pickle_file = "{}_{}_{}_{}_{}_{}_{}_trial{}_seed{}".format(identifier,
                                                                dataset,
                                                                net,
                                                                sampling_min,
@@ -148,13 +141,13 @@ def main(args):
     num_epochs = get_num_epochs(args.dataset, args.profile)
     kath_strategy = get_kath_strategy()
     max_history_length = get_max_history_length()
-    selector_strategy = get_selector(args.strategy)
     output_dir, pickles_dir = get_experiment_dirs(args.dst_dir, args.dataset, args.expname)
     assert(args.strategy in ["nofilter", "sb", "kath"])
 
     for trial in range(1, args.num_trials+1):
         seed = seeder.get_seed()
-        output_file, pickle_file = get_output_files(selector_strategy,
+        output_file, pickle_file = get_output_files(args.strategy,
+                                                    args.calculator,
                                                     args.dataset,
                                                     model,
                                                     sampling_min,
@@ -163,7 +156,6 @@ def main(args):
                                                     decay,
                                                     trial,
                                                     seed,
-                                                    args.strategy,
                                                     kath_strategy,
                                                     static_sample_size)
         if args.profile:
@@ -182,6 +174,7 @@ def main(args):
         cmd += "--forwardlr "
         cmd += "--sb "
         cmd += "--strategy {} ".format(args.strategy)
+        cmd += "--calculator {} ".format(args.calculator)
 
         cmd = cmd.strip()
 
