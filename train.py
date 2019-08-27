@@ -38,7 +38,7 @@ start_time_seconds = time.time()
 model_options = ['resnet18', 'wideresnet']
 strategy_options = ['nofilter', 'sb', 'kath']
 dataset_options = ['cifar10', 'cifar100', 'svhn']
-calculator_options = ['relative', 'random']
+calculator_options = ['relative', 'random', 'hybrid']
 
 parser = argparse.ArgumentParser(description='CNN')
 parser.add_argument('--dataset', '-d', default='cifar10',
