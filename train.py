@@ -175,7 +175,7 @@ elif args.dataset == 'svhn':
 
 # Data Loader (Input Pipeline)
 static_dataset = [a for a in train_dataset]
-static_dataset = static_dataset[:128]
+static_dataset = static_dataset[:512]
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
                                            batch_size=args.batch_size,
                                            shuffle=True,
@@ -251,7 +251,7 @@ def test_sb(loader, epoch, sb):
                 sb.logger.global_num_skipped,
                 test_loss,
                 100.*val_acc,
-                0,
+                sb.logger.global_num_skipped_fp,
                 time.time() - start_time_seconds))
     cnn.train()
     return 100. * val_acc
