@@ -174,6 +174,8 @@ elif args.dataset == 'svhn':
                                     download=True)
 
 # Data Loader (Input Pipeline)
+static_dataset = [a for a in train_dataset]
+static_dataset = static_dataset[:128]
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
                                            batch_size=args.batch_size,
                                            shuffle=True,
