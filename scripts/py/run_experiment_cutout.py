@@ -40,7 +40,7 @@ def get_kath_strategy():
 
 def get_num_epochs(dataset, profile):
     if profile:
-        return 5
+        return 10
     if dataset == "svhn":
         return 160
     else:
