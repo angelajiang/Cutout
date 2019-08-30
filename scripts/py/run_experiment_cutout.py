@@ -15,7 +15,7 @@ def set_experiment_default_args(parser):
     parser.add_argument('--num-trials', default=1, type=int, help='number of trials')
     parser.add_argument('--batch-size', '-b', default=128, type=int, help='batch size')
     parser.add_argument('--src-dir', default="./", type=str, help='/path/to/pytorch-cifar')
-    parser.add_argument('--dst-dir', default="/proj/BigLearning/ahjiang/output/", type=str, help='/path/to/dst/dir')
+    parser.add_argument('--dst-dir', default="/ssd/ahjiang/output/", type=str, help='/path/to/dst/dir')
     return parser
 
 class Seeder():
