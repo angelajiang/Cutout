@@ -51,11 +51,11 @@ def get_learning_rate(dataset, custom_lr):
         return custom_lr
 
     if dataset == "svhn":
-        return "data/config/sysml20/lr_sched_svhn_wideresnet"
+        return "pytorch-cifar/data/config/sysml20/svhn/lr_sched_svhn_wideresnet"
     elif dataset == "cifar10":
-        return "data/config/sysml20/lr_sched_cifar10_wideresnet"
+        return "pytorch-cifar/data/config/sysml20/cifar10/lr_sched_cifar10_wideresnet"
     elif dataset == "cifar100":
-        return "data/config/sysml20/lr_sched_cifar100_wideresnet"
+        return "pytorch-cifar/data/config/sysml20/svhn/lr_sched_cifar100_wideresnet"
 
 def get_length(dataset):
     if dataset == "cifar10":
