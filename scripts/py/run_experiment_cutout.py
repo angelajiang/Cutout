@@ -58,11 +58,11 @@ def get_learning_rate(dataset, accelerate_lr, custom_lr):
     base = "/users/ahjiang/src/Cutout/pytorch-cifar/data/config/sysml20/"
     if accelerate_lr:
         if dataset == "svhn":
-            return "{}/svhn/sampling_relative-svhn-wideresnet-0-128-1024-0.0005-trial1-seed1337-v4.lr".format(base)
+            return "{}/svhn/sampling-relative_svhn_wideresnet_0_128_1024_0.0005_trial1_seed1337_v4.lr".format(base)
         elif dataset == "cifar10":
-            return "{}/cifar10/sampling-cifar10-wideresnet-0-128-1024-0.0005-trial1-seed1337-v4.lr".format(base)
+            return "{}/cifar10/sampling_cifar10_wideresnet_0_128_1024_0.0005_trial1_seed1337_v4.lr".format(base)
         elif dataset == "cifar100":
-            return "{}/cifar100/sampling_relative-cifar100-wideresnet-0-128-1024-0.0005-trial1-seed1337-v4.lr".format(base)
+            return "{}/cifar100/sampling-relative_cifar100_wideresnet_0_128_1024_0.0005_trial1_seed1337_v4.lr".format(base)
     else:
         if dataset == "svhn":
             return "{}/svhn/lr_sched_svhn_wideresnet".format(base)
