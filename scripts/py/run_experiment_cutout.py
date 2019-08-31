@@ -103,7 +103,7 @@ def get_output_files(strategy,
     elif strategy == "sb":
         identifier = "sampling-{}".format(calculator)
 
-    output_file = "{}_{}_{}_{}_{}_{}_{}_trial{}_seed{}_v4".format(identifier,
+    output_file = "{}_{}_{}_{}_{}_{}_{}_trial{}_seed{}_v5".format(identifier,
                                                                   dataset,
                                                                   net,
                                                                   sampling_min,
