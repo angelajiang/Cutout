@@ -8,8 +8,11 @@ def set_experiment_default_args(parser):
     parser.add_argument('--expname', '-e', default="tmp", type=str, help='experiment name')
     parser.add_argument('--strategy', '-s', default="nofilter", type=str, help='nofilter, sb, kath')
     parser.add_argument('--calculator', '-c', default="relative", type=str, help='relative, random')
+    parser.add_argument('--fp_selector', '-f', default="alwayson", type=str, help='alwayson, stale')
     parser.add_argument('--dataset', '-d', default="cifar10", type=str, choices=['svhn', 'cifar10', 'cifar100'])
     parser.add_argument('--custom-lr', default=None, type=str)
+    parser.add_argument('--accelerate-lr', dest='accelerate_lr', action='store_true',
+                        help='Use hardcoded accelerated lr schedule')
     parser.add_argument('--profile', dest='profile', action='store_true',
                         help='turn profiling on')
     parser.add_argument('--num-trials', default=1, type=int, help='number of trials')
@@ -40,22 +43,31 @@ def get_kath_strategy():
 
 def get_num_epochs(dataset, profile):
     if profile:
-        return 10
+        return 3
     if dataset == "svhn":
         return 160
     else:
         return 200
 
-def get_learning_rate(dataset, custom_lr):
+def get_learning_rate(dataset, accelerate_lr, custom_lr):
     if custom_lr is not None:
         return custom_lr
 
-    if dataset == "svhn":
-        return "data/config/sysml20/lr_sched_svhn_wideresnet"
-    elif dataset == "cifar10":
-        return "data/config/sysml20/lr_sched_cifar10_wideresnet"
-    elif dataset == "cifar100":
-        return "data/config/sysml20/lr_sched_cifar100_wideresnet"
+    base = "/home/ahjiang/Cutout/pytorch-cifar/data/config/sysml20/"
+    if accelerate_lr:
+        if dataset == "svhn":
+            return "{}/svhn/sampling_relative-svhn-wideresnet-0-128-1024-0.0005-trial1-seed1337-v4.lr".format(base)
+        elif dataset == "cifar10":
+            return "{}/cifar10/sampling-cifar10-wideresnet-0-128-1024-0.0005-trial1-seed1337-v4.lr".format(base)
+        elif dataset == "cifar100":
+            return "{}/cifar100/sampling_relative-cifar100-wideresnet-0-128-1024-0.0005-trial1-seed1337-v4.lr".format(base)
+    else:
+        if dataset == "svhn":
+            return "{}/svhn/lr_sched_svhn_wideresnet".format(base)
+        elif dataset == "cifar10":
+            return "{}/cifar10/lr_sched_cifar10_wideresnet".format(base)
+        elif dataset == "cifar100":
+            return "{}/cifar100/lr_sched_cifar100_wideresnet".format(base)
 
 def get_length(dataset):
     if dataset == "cifar10":
@@ -81,6 +93,7 @@ def get_output_dirs(dst_dir):
 
 def get_output_files(strategy,
                      calculator,
+                     fp_selector,
                      dataset,
                      net,
                      sampling_min,
@@ -101,7 +114,7 @@ def get_output_files(strategy,
         identifier = "topk"
         max_history_length = static_sample_size
     elif strategy == "sb":
-        identifier = "sampling-{}".format(calculator)
+        identifier = "{}-{}-{}".format(strategy, calculator, fp_selector)
 
     output_file = "{}_{}_{}_{}_{}_{}_{}_trial{}_seed{}_v4".format(identifier,
                                                                   dataset,
@@ -139,7 +152,7 @@ def main(args):
     sampling_min = get_sampling_min()
     decay = get_decay()
     static_sample_size = get_sample_size(args.batch_size)
-    lr_file = get_learning_rate(args.dataset, args.custom_lr)
+    lr_file = get_learning_rate(args.dataset, args.accelerate_lr, args.custom_lr)
     length = get_length(args.dataset)
     model = get_model()
     num_epochs = get_num_epochs(args.dataset, args.profile)
@@ -152,6 +165,7 @@ def main(args):
         seed = seeder.get_seed()
         output_file, pickle_file = get_output_files(args.strategy,
                                                     args.calculator,
+                                                    args.fp_selector,
                                                     args.dataset,
                                                     model,
                                                     sampling_min,
@@ -179,6 +193,7 @@ def main(args):
         cmd += "--sb "
         cmd += "--strategy {} ".format(args.strategy)
         cmd += "--calculator {} ".format(args.calculator)
+        cmd += "--fp_selector {} ".format(args.fp_selector)
 
         cmd = cmd.strip()
 
