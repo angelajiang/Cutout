@@ -26,7 +26,7 @@ from model.resnet import ResNet18
 from model.wide_resnet import WideResNet
 
 
-sys.path.insert(0, "/users/ahjiang/src/Cutout/pytorch-cifar")
+sys.path.insert(0, "/home/ahjiang/Cutout/pytorch-cifar")
 from lib.SelectiveBackpropper import SelectiveBackpropper
 #import main as sb
 import lib.cifar
@@ -39,6 +39,7 @@ model_options = ['resnet18', 'wideresnet']
 strategy_options = ['nofilter', 'sb', 'kath']
 dataset_options = ['cifar10', 'cifar100', 'svhn']
 calculator_options = ['relative', 'random', 'hybrid']
+fp_selector_options = ['alwayson', 'stale']
 
 parser = argparse.ArgumentParser(description='CNN')
 parser.add_argument('--dataset', '-d', default='cifar10',
@@ -76,9 +77,11 @@ parser.add_argument('--forwardlr', dest='forwardlr', action='store_true',
                     help='LR schedule based on forward passes')
 parser.add_argument('--strategy', default='nofilter', choices=strategy_options)
 parser.add_argument('--calculator', default='relative', choices=calculator_options)
+parser.add_argument('--fp_selector', default='alwayson', choices=fp_selector_options)
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
+assert args.cuda
 cudnn.benchmark = True  # Should make training should go faster for large models
 
 torch.manual_seed(args.seed)
@@ -130,37 +133,37 @@ test_transform = transforms.Compose([
 
 if args.dataset == 'cifar10':
     num_classes = 10
-    train_dataset = dataset_lib.CIFAR10(root='data/',
+    train_dataset = dataset_lib.CIFAR10(root='/ssd/datasets/cifar10/',
                                         train=True,
                                         transform=train_transform,
                                         download=True)
 
-    test_dataset = dataset_lib.CIFAR10(root='data/',
-                                    train=False,
-                                    transform=test_transform,
-                                    download=True)
+    test_dataset = dataset_lib.CIFAR10(root='/ssd/datasets/cifar10/',
+                                       train=False,
+                                       transform=test_transform,
+                                       download=True)
 elif args.dataset == 'cifar100':
     num_classes = 100
-    train_dataset = dataset_lib.CIFAR100(root='data/',
-                                      train=True,
-                                      transform=train_transform,
-                                      download=True)
+    train_dataset = dataset_lib.CIFAR100(root='/ssd/datasets/cifar100/',
+                                         train=True,
+                                         transform=train_transform,
+                                         download=True)
 
-    test_dataset = dataset_lib.CIFAR100(root='data/',
-                                     train=False,
-                                     transform=test_transform,
-                                     download=True)
+    test_dataset = dataset_lib.CIFAR100(root='/ssd/datasets/cifar100/',
+                                        train=False,
+                                        transform=test_transform,
+                                        download=True)
 elif args.dataset == 'svhn':
     num_classes = 10
-    train_dataset = dataset_lib.SVHN(root='data/',
-                                  split='train',
-                                  transform=train_transform,
-                                  download=True)
+    train_dataset = dataset_lib.SVHN(root='/ssd/datasets/svhn/',
+                                     split='train',
+                                     transform=train_transform,
+                                     download=True)
 
-    extra_dataset = dataset_lib.SVHN(root='data/',
-                                  split='extra',
-                                  transform=train_transform,
-                                  download=True)
+    extra_dataset = dataset_lib.SVHN(root='/ssd/datasets/svhn/',
+                                     split='extra',
+                                     transform=train_transform,
+                                     download=True)
 
     # Combine both training splits (https://arxiv.org/pdf/1605.07146.pdf)
     data = np.concatenate([train_dataset.data, extra_dataset.data], axis=0)
@@ -168,7 +171,7 @@ elif args.dataset == 'svhn':
     train_dataset.data = data
     train_dataset.labels = labels
 
-    test_dataset = dataset_lib.SVHN(root='data/',
+    test_dataset = dataset_lib.SVHN(root='/ssd/datasets/svhn/',
                                     split='test',
                                     transform=test_transform,
                                     download=True)
@@ -222,7 +225,8 @@ sb = SelectiveBackpropper(cnn,
                           len(train_dataset),
                           args.forwardlr,
                           args.strategy,
-                          args.calculator)
+                          args.calculator,
+                          args.fp_selector)
 
 def test_sb(loader, epoch, sb):
     cnn.eval()    # Change model to 'eval' mode (BN uses moving mean/var).
