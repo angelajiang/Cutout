@@ -1,0 +1,10 @@
+h2.bias-4-3.BigLearning.narwhal.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -s sb -s=kath -e 190830_lr1 -b 128 -d svhn
+h3.bias-4-3.BigLearning.narwhal.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py --accelerate-lr -s sb -s=kath -e 190830_lr2 -b 128 -d svhn
+h0.bias-4-4.BigLearning.narwhal.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -s sb -s=nofilter -e 190830_lr1 -b 128 -d svhn
+h1.bias-4-4.BigLearning.narwhal.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -s sb -s=sb -f alwayson -c=relative -e 190830_lr1 -b 128 -d svhn
+h2.bias-4-4.BigLearning.narwhal.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -s sb -s=sb -f alwayson -c=random -e 190830_lr1 -b 128 -d svhn
+h3.bias-4-4.BigLearning.narwhal.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -s sb -s=sb -f stale -c=relative -e 190830_lr1 -b 128 -d svhn
+h0.bias-4-5.BigLearning.narwhal.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py --accelerate-lr -s sb -s=nofilter -e 190830_lr1 -b 128 -d svhn
+h1.bias-4-5.BigLearning.narwhal.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py --accelerate-lr -s sb -s=sb -f alwayson -c=relative -e 190830_lr2 -b 128 -d svhn
+h2.bias-4-5.BigLearning.narwhal.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py --accelerate-lr -s sb -s=sb -f alwayson -c=random -e 190830_lr2 -b 128 -d svhn
+h3.bias-4-5.BigLearning.narwhal.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py --accelerate-lr -s sb -s=sb -f stale -c=relative -e 190830_lr2 -b 128 -d svhn
