@@ -80,7 +80,7 @@ def get_length(dataset):
         return 20
 
 def get_sample_size(batch_size):
-    return batch_size * 4
+    return batch_size * 3
 
 def get_model():
     return "wideresnet"
