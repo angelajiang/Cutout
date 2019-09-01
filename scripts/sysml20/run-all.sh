@@ -33,13 +33,20 @@ echo "Cmd config file:"
 while read line; do
   node_name_list[$process_idx]=`echo $line | cut -d';' -f 1 | awk '{$1=$1};1'`
   cmd_list[$process_idx]=`echo $line | cut -d';' -f 2 | awk '{$1=$1};1'`
-
   echo $process_idx ${node_name_list[$process_idx]} ${cmd_list[$process_idx]}
   ((process_idx+=1))
 done < $cmd_config_file
 echo ""
-
 # Here, process_idx = number of nodes
+
+# Anaconda location depends on cluster
+hostname=`hostname`
+if [[ $hostname == *"narwhal"* ]]; then
+  anaconda_src_cmd="source ~/src/anaconda2/bin/activate"
+else
+  anaconda_src_cmd="source ~/anaconda2/bin/activate"
+fi
+
 
 # No argument => All nodes
 if [ "$#" -eq 1 ]; then
@@ -52,6 +59,7 @@ if [ "$#" -eq 1 ]; then
 		blue "Running on node $i, name $name, cmd $cmd"
 
 		ssh -oStrictHostKeyChecking=no $name "\
+      $anaconda_src_cmd; \
 			cd src/Cutout/; \
       $cmd &" &
 	done
@@ -64,6 +72,7 @@ if [ "$#" -eq 2 ]; then
   blue "Running on node $2, name $name, cmd $cmd"
 
   ssh -oStrictHostKeyChecking=no $name "\
+    source ~/src/anaconda2/bin/activate; \
     cd src/Cutout/; \
     $cmd &"
 fi
