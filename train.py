@@ -27,7 +27,6 @@ from model.wide_resnet import WideResNet
 
 
 sys.path.insert(0, "/home/ahjiang/Cutout/pytorch-cifar")
-sys.path.insert(0, "/users/ahjiang/src/Cutout/pytorch-cifar")
 from lib.SelectiveBackpropper import SelectiveBackpropper
 #import main as sb
 import lib.cifar
@@ -134,34 +133,34 @@ test_transform = transforms.Compose([
 
 if args.dataset == 'cifar10':
     num_classes = 10
-    train_dataset = dataset_lib.CIFAR10(root='data/',
+    train_dataset = dataset_lib.CIFAR10(root='/ssd/datasets/cifar10/',
                                         train=True,
                                         transform=train_transform,
                                         download=True)
 
-    test_dataset = dataset_lib.CIFAR10(root='data/',
+    test_dataset = dataset_lib.CIFAR10(root='/ssd/datasets/cifar10/',
                                        train=False,
                                        transform=test_transform,
                                        download=True)
 elif args.dataset == 'cifar100':
     num_classes = 100
-    train_dataset = dataset_lib.CIFAR100(root='data/',
+    train_dataset = dataset_lib.CIFAR100(root='/ssd/datasets/cifar100/',
                                          train=True,
                                          transform=train_transform,
                                          download=True)
 
-    test_dataset = dataset_lib.CIFAR100(root='data/',
+    test_dataset = dataset_lib.CIFAR100(root='/ssd/datasets/cifar100/',
                                         train=False,
                                         transform=test_transform,
                                         download=True)
 elif args.dataset == 'svhn':
     num_classes = 10
-    train_dataset = dataset_lib.SVHN(root='data/',
+    train_dataset = dataset_lib.SVHN(root='/ssd/datasets/svhn/',
                                      split='train',
                                      transform=train_transform,
                                      download=True)
 
-    extra_dataset = dataset_lib.SVHN(root='data/',
+    extra_dataset = dataset_lib.SVHN(root='/ssd/datasets/svhn/',
                                      split='extra',
                                      transform=train_transform,
                                      download=True)
@@ -172,7 +171,7 @@ elif args.dataset == 'svhn':
     train_dataset.data = data
     train_dataset.labels = labels
 
-    test_dataset = dataset_lib.SVHN(root='data/',
+    test_dataset = dataset_lib.SVHN(root='/ssd/datasets/svhn/',
                                     split='test',
                                     transform=test_transform,
                                     download=True)
