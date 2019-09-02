@@ -78,7 +78,7 @@ def get_length(dataset):
         return 20
 
 def get_sample_size(batch_size):
-    return batch_size * 3
+    return batch_size * 4
 
 def get_model():
     return "wideresnet"
@@ -113,7 +113,7 @@ def get_output_files(strategy,
     elif strategy == "topk":
         identifier = "topk"
         max_history_length = static_sample_size
-    elif strategy == "sb":
+    elif "sb" in strategy:
         identifier = "{}-{}-{}".format(strategy, calculator, fp_selector)
 
     output_file = "{}_{}_{}_{}_{}_{}_{}_trial{}_seed{}_v5".format(identifier,
@@ -159,7 +159,7 @@ def main(args):
     kath_strategy = get_kath_strategy()
     max_history_length = get_max_history_length()
     output_dir, pickles_dir = get_experiment_dirs(args.dst_dir, args.dataset, args.expname)
-    assert(args.strategy in ["nofilter", "sb", "kath"])
+    assert(args.strategy in ["nofilter", "sb", "kath", "sb-async"])
 
     for trial in range(1, args.num_trials+1):
         seed = seeder.get_seed()
