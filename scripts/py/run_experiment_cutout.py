@@ -10,6 +10,7 @@ def set_experiment_default_args(parser):
     parser.add_argument('--calculator', '-c', default="relative", type=str, help='relative, random')
     parser.add_argument('--fp_selector', '-f', default="alwayson", type=str, help='alwayson, stale')
     parser.add_argument('--dataset', '-d', default="cifar10", type=str, choices=['svhn', 'cifar10', 'cifar100'])
+    parser.add_argument('--prob-pow', type=int, default=3, help='dictates SB selectivity')
     parser.add_argument('--custom-lr', default=None, type=str)
     parser.add_argument('--accelerate-lr', dest='accelerate_lr', action='store_true',
                         help='Use hardcoded accelerated lr schedule')
@@ -32,9 +33,6 @@ class Seeder():
 
 def get_sampling_min():
     return 0
-
-def get_decay():
-    return 0.0005
 
 def get_max_history_length():
     return 1024
@@ -101,7 +99,7 @@ def get_output_files(strategy,
                      sampling_min,
                      batch_size,
                      max_history_length,
-                     decay,
+                     prob_pow,
                      trial,
                      seed,
                      kath_strategy,
@@ -124,7 +122,7 @@ def get_output_files(strategy,
                                                                   sampling_min,
                                                                   batch_size,
                                                                   max_history_length,
-                                                                  decay,
+                                                                  prob_pow,
                                                                   trial,
                                                                   seed)
 
@@ -134,7 +132,7 @@ def get_output_files(strategy,
                                                                sampling_min,
                                                                batch_size,
                                                                max_history_length,
-                                                               decay,
+                                                               prob_pow,
                                                                trial,
                                                                seed)
     return output_file, pickle_file
@@ -152,7 +150,6 @@ def main(args):
     seeder = Seeder()
     src_dir = os.path.abspath(args.src_dir)
     sampling_min = get_sampling_min()
-    decay = get_decay()
     static_sample_size = get_sample_size(args.batch_size)
     lr_file = get_learning_rate(args.dataset, args.accelerate_lr, args.custom_lr)
     length = get_length(args.dataset)
@@ -173,7 +170,7 @@ def main(args):
                                                     sampling_min,
                                                     args.batch_size,
                                                     max_history_length,
-                                                    decay,
+                                                    args.prob_pow,
                                                     trial,
                                                     seed,
                                                     kath_strategy,
@@ -190,6 +187,7 @@ def main(args):
         cmd += "--length {} ".format(length)
         cmd += "--epochs {} ".format(num_epochs)
         cmd += "--batch_size {} ".format(args.batch_size)
+        cmd += "--prob_pow {} ".format(args.prob_pow)
         cmd += "--cutout "
         cmd += "--forwardlr "
         cmd += "--sb "
