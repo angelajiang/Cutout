@@ -10,7 +10,7 @@ def set_experiment_default_args(parser):
     parser.add_argument('--calculator', '-c', default="relative", type=str, help='relative, random')
     parser.add_argument('--fp_selector', '-f', default="alwayson", type=str, help='alwayson, stale')
     parser.add_argument('--dataset', '-d', default="cifar10", type=str, choices=['svhn', 'cifar10', 'cifar100'])
-    parser.add_argument('--prob-pow', type=int, default=3, help='dictates SB selectivity')
+    parser.add_argument('--prob-pow', '-p", 'type=int, default=3, help='dictates SB selectivity')
     parser.add_argument('--custom-lr', default=None, type=str)
     parser.add_argument('--accelerate-lr', dest='accelerate_lr', action='store_true',
                         help='Use hardcoded accelerated lr schedule')
