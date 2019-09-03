@@ -43,13 +43,16 @@ def get_max_history_length():
 def get_kath_strategy():
     return "reweighted"
 
-def get_num_epochs(dataset, profile):
+def get_num_epochs(dataset, profile, decelerate_lr):
     if profile:
         return 3
     if dataset == "svhn":
-        return 160
+        base = 160
     else:
-        return 200
+        base = 200
+    if decelerate_lr:
+        base = base * 2
+    return base
 
 def get_learning_rate(dataset, accelerate_lr, decelerate_lr, custom_lr):
     if custom_lr is not None:
@@ -58,14 +61,14 @@ def get_learning_rate(dataset, accelerate_lr, decelerate_lr, custom_lr):
     base = "/home/ahjiang/Cutout/pytorch-cifar/data/config/sysml20/"
     base = "/users/ahjiang/src/Cutout/pytorch-cifar/data/config/sysml20/"
 
-    if accelerate_lr:
+    if decelerate_lr:
         if dataset == "svhn":
             return "{}/svhn/lr_sched_svhn_wideresnet_2x".format(base)
         elif dataset == "cifar10":
             return "{}/cifar10/lr_sched_cifar10_wideresnet_2x".format(base)
         elif dataset == "cifar100":
             return "{}/cifar100/lr_sched_cifar100_wideresnet_2x".format(base)
-    elif decelerate_lr:
+    elif accelerate_lr:
         if dataset == "svhn":
             return "{}/svhn/lr_sched_svhn_wideresnet_0.5x".format(base)
         elif dataset == "cifar10":
@@ -172,7 +175,7 @@ def main(args):
     lr_file = get_learning_rate(args.dataset, args.accelerate_lr, args.decelerate_lr, args.custom_lr)
     length = get_length(args.dataset)
     model = get_model()
-    num_epochs = get_num_epochs(args.dataset, args.profile)
+    num_epochs = get_num_epochs(args.dataset, args.profile, args.decelerate_lr)
     kath_strategy = get_kath_strategy()
     max_history_length = get_max_history_length()
     output_dir, pickles_dir = get_experiment_dirs(args.dst_dir, args.dataset, args.expname)
