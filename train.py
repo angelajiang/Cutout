@@ -26,6 +26,7 @@ from model.resnet import ResNet18
 from model.wide_resnet import WideResNet
 
 
+sys.path.insert(0, "/users/ahjiang/src/Cutout/pytorch-cifar")
 sys.path.insert(0, "/home/ahjiang/Cutout/pytorch-cifar")
 from lib.SelectiveBackpropper import SelectiveBackpropper
 #import main as sb
@@ -135,34 +136,40 @@ test_transform = transforms.Compose([
 
 if args.dataset == 'cifar10':
     num_classes = 10
-    train_dataset = dataset_lib.CIFAR10(root='/ssd/datasets/cifar10/',
+    train_dataset = dataset_lib.CIFAR10(#root='/ssd/datasets/cifar10/',
+                                        root="data/",
                                         train=True,
                                         transform=train_transform,
                                         download=True)
 
-    test_dataset = dataset_lib.CIFAR10(root='/ssd/datasets/cifar10/',
+    test_dataset = dataset_lib.CIFAR10(#root='/ssd/datasets/cifar10/',
+                                       root="data/",
                                        train=False,
                                        transform=test_transform,
                                        download=True)
 elif args.dataset == 'cifar100':
     num_classes = 100
-    train_dataset = dataset_lib.CIFAR100(root='/ssd/datasets/cifar100/',
+    train_dataset = dataset_lib.CIFAR100(#root='/ssd/datasets/cifar100/',
+                                         root="data/",
                                          train=True,
                                          transform=train_transform,
                                          download=True)
 
-    test_dataset = dataset_lib.CIFAR100(root='/ssd/datasets/cifar100/',
+    test_dataset = dataset_lib.CIFAR100(#root='/ssd/datasets/cifar100/',
+                                        root="data/",
                                         train=False,
                                         transform=test_transform,
                                         download=True)
 elif args.dataset == 'svhn':
     num_classes = 10
-    train_dataset = dataset_lib.SVHN(root='/ssd/datasets/svhn/',
+    train_dataset = dataset_lib.SVHN(#root='/ssd/datasets/svhn/',
+                                     root="data/",
                                      split='train',
                                      transform=train_transform,
                                      download=True)
 
-    extra_dataset = dataset_lib.SVHN(root='/ssd/datasets/svhn/',
+    extra_dataset = dataset_lib.SVHN(#root='/ssd/datasets/svhn/',
+                                     root="data/",
                                      split='extra',
                                      transform=train_transform,
                                      download=True)
