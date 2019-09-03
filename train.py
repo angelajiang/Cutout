@@ -69,6 +69,8 @@ parser.add_argument('--output_dir', default="./logs",
 
 parser.add_argument('--sampling_min', type=float, default=0,
                     help='sampling min for SB')
+parser.add_argument('--kath_oversampling_rate', type=int, default=0,
+                    help='oversampling rate for kath')
 parser.add_argument('--lr_sched', default=None,
                     help='path to file with manual lr schedule')
 parser.add_argument('--sb', action='store_true', default=False,
@@ -225,6 +227,7 @@ sb = SelectiveBackpropper(cnn,
                           len(train_dataset),
                           args.forwardlr,
                           args.strategy,
+                          args.kath_oversampling_rate,
                           args.calculator,
                           args.fp_selector)
 

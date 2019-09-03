@@ -17,6 +17,7 @@ def set_experiment_default_args(parser):
                         help='turn profiling on')
     parser.add_argument('--num-trials', default=1, type=int, help='number of trials')
     parser.add_argument('--batch-size', '-b', default=128, type=int, help='batch size')
+    parser.add_argument('--kath-oversampling-rate', '-k', default=4, type=int, help='kath oversampling rate')
     parser.add_argument('--src-dir', default="./", type=str, help='/path/to/pytorch-cifar')
     parser.add_argument('--dst-dir', default="/ssd/ahjiang/output/", type=str, help='/path/to/dst/dir')
     return parser
@@ -77,9 +78,8 @@ def get_length(dataset):
     elif dataset == "svhn":
         return 20
 
-def get_sample_size(batch_size):
-    return batch_size * 3
-
+def get_sample_size(batch_size, kath_oversampling_rate):
+    return batch_size * kath_oversampling_rate 
 def get_model():
     return "wideresnet"
 
@@ -151,7 +151,7 @@ def main(args):
     src_dir = os.path.abspath(args.src_dir)
     sampling_min = get_sampling_min()
     decay = get_decay()
-    static_sample_size = get_sample_size(args.batch_size)
+    static_sample_size = get_sample_size(args.batch_size, args.kath_oversampling_rate)
     lr_file = get_learning_rate(args.dataset, args.accelerate_lr, args.custom_lr)
     length = get_length(args.dataset)
     model = get_model()
@@ -188,6 +188,7 @@ def main(args):
         cmd += "--length {} ".format(length)
         cmd += "--epochs {} ".format(num_epochs)
         cmd += "--batch_size {} ".format(args.batch_size)
+        cmd += "--kath_oversampling_rate {} ".format(args.kath_oversampling_rate)
         cmd += "--cutout "
         cmd += "--forwardlr "
         cmd += "--sb "
