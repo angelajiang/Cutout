@@ -67,10 +67,10 @@ parser.add_argument('--seed', type=int, default=0,
 parser.add_argument('--output_dir', default="./logs",
                     help='directory to place logs')
 
-parser.add_argument('--sampling_min', type=float, default=0,
-                    help='sampling min for SB')
 parser.add_argument('--kath_oversampling_rate', type=int, default=0,
                     help='oversampling rate for kath')
+parser.add_argument('--prob_pow', type=int, default=3,
+                    help='dictates SB selectivity')
 parser.add_argument('--lr_sched', default=None,
                     help='path to file with manual lr schedule')
 parser.add_argument('--sb', action='store_true', default=False,
@@ -97,7 +97,7 @@ test_id = args.dataset + '_' + args.model
 
 # Prepare selective backprop things
 if args.sb:
-    filename = args.output_dir + "/" + test_id + '_' + str(args.sampling_min) + '_sb.csv'
+    filename = args.output_dir + "/" + test_id + '_sb.csv'
     if args.dataset == 'cifar10' or args.dataset == 'cifar100':
         dataset_lib = lib.cifar
     elif args.dataset == 'svhn':
@@ -220,7 +220,7 @@ if not os.path.exists(args.output_dir):
 
 sb = SelectiveBackpropper(cnn,
                           cnn_optimizer,
-                          args.sampling_min,
+                          args.prob_pow,
                           args.batch_size,
                           args.lr_sched,
                           num_classes,

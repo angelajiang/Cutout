@@ -10,16 +10,21 @@ def set_experiment_default_args(parser):
     parser.add_argument('--calculator', '-c', default="relative", type=str, help='relative, random')
     parser.add_argument('--fp_selector', '-f', default="alwayson", type=str, help='alwayson, stale')
     parser.add_argument('--dataset', '-d', default="cifar10", type=str, choices=['svhn', 'cifar10', 'cifar100'])
-    parser.add_argument('--custom-lr', default=None, type=str)
-    parser.add_argument('--accelerate-lr', dest='accelerate_lr', action='store_true',
-                        help='Use hardcoded accelerated lr schedule')
+    parser.add_argument('--prob-pow', '-p', type=int, default=3, help='dictates SB selectivity')
     parser.add_argument('--profile', dest='profile', action='store_true',
                         help='turn profiling on')
     parser.add_argument('--num-trials', default=1, type=int, help='number of trials')
     parser.add_argument('--batch-size', '-b', default=128, type=int, help='batch size')
     parser.add_argument('--kath-oversampling-rate', '-k', default=4, type=int, help='kath oversampling rate')
     parser.add_argument('--src-dir', default="./", type=str, help='/path/to/pytorch-cifar')
-    parser.add_argument('--dst-dir', default="/ssd/ahjiang/output/", type=str, help='/path/to/dst/dir')
+    #parser.add_argument('--dst-dir', default="/ssd/ahjiang/output/", type=str, help='/path/to/dst/dir')
+    parser.add_argument('--dst-dir', default="/proj/BigLearning/ahjiang/output/", type=str, help='/path/to/dst/dir')
+
+    parser.add_argument('--custom-lr', default=None, type=str)
+    parser.add_argument('--accelerate-lr', dest='accelerate_lr', action='store_true',
+                        help='Use hardcoded accelerated lr schedule')
+    parser.add_argument('--decelerate-lr', dest='decelerate_lr', action='store_true',
+                        help='Use hardcoded decelerated lr schedule')
     return parser
 
 class Seeder():
@@ -32,9 +37,6 @@ class Seeder():
 
 def get_sampling_min():
     return 0
-
-def get_decay():
-    return 0.0005
 
 def get_max_history_length():
     return 1024
@@ -50,18 +52,27 @@ def get_num_epochs(dataset, profile):
     else:
         return 200
 
-def get_learning_rate(dataset, accelerate_lr, custom_lr):
+def get_learning_rate(dataset, accelerate_lr, decelerate_lr, custom_lr):
     if custom_lr is not None:
         return custom_lr
 
     base = "/home/ahjiang/Cutout/pytorch-cifar/data/config/sysml20/"
+    base = "/users/ahjiang/src/Cutout/pytorch-cifar/data/config/sysml20/"
+
     if accelerate_lr:
         if dataset == "svhn":
-            return "{}/svhn/sampling-relative_svhn_wideresnet_0_128_1024_0.0005_trial1_seed1337_v4.lr".format(base)
+            return "{}/svhn/lr_sched_svhn_wideresnet_2x".format(base)
         elif dataset == "cifar10":
-            return "{}/cifar10/sampling_cifar10_wideresnet_0_128_1024_0.0005_trial1_seed1337_v4.lr".format(base)
+            return "{}/cifar10/lr_sched_cifar10_wideresnet_2x".format(base)
         elif dataset == "cifar100":
-            return "{}/cifar100/sampling-relative_cifar100_wideresnet_0_128_1024_0.0005_trial1_seed1337_v4.lr".format(base)
+            return "{}/cifar100/lr_sched_cifar100_wideresnet_2x".format(base)
+    elif decelerate_lr:
+        if dataset == "svhn":
+            return "{}/svhn/lr_sched_svhn_wideresnet_0.5x".format(base)
+        elif dataset == "cifar10":
+            return "{}/cifar10/lr_sched_cifar10_wideresnet_0.5x".format(base)
+        elif dataset == "cifar100":
+            return "{}/cifar100/lr_sched_cifar100_wideresnet_0.5x".format(base)
     else:
         if dataset == "svhn":
             return "{}/svhn/lr_sched_svhn_wideresnet".format(base)
@@ -99,7 +110,7 @@ def get_output_files(strategy,
                      sampling_min,
                      batch_size,
                      max_history_length,
-                     decay,
+                     prob_pow,
                      trial,
                      seed,
                      kath_strategy,
@@ -122,7 +133,7 @@ def get_output_files(strategy,
                                                                   sampling_min,
                                                                   batch_size,
                                                                   max_history_length,
-                                                                  decay,
+                                                                  prob_pow,
                                                                   trial,
                                                                   seed)
 
@@ -132,7 +143,7 @@ def get_output_files(strategy,
                                                                sampling_min,
                                                                batch_size,
                                                                max_history_length,
-                                                               decay,
+                                                               prob_pow,
                                                                trial,
                                                                seed)
     return output_file, pickle_file
@@ -150,9 +161,8 @@ def main(args):
     seeder = Seeder()
     src_dir = os.path.abspath(args.src_dir)
     sampling_min = get_sampling_min()
-    decay = get_decay()
     static_sample_size = get_sample_size(args.batch_size, args.kath_oversampling_rate)
-    lr_file = get_learning_rate(args.dataset, args.accelerate_lr, args.custom_lr)
+    lr_file = get_learning_rate(args.dataset, args.accelerate_lr, args.decelerate_lr, args.custom_lr)
     length = get_length(args.dataset)
     model = get_model()
     num_epochs = get_num_epochs(args.dataset, args.profile)
@@ -171,7 +181,7 @@ def main(args):
                                                     sampling_min,
                                                     args.batch_size,
                                                     max_history_length,
-                                                    decay,
+                                                    args.prob_pow,
                                                     trial,
                                                     seed,
                                                     kath_strategy,
@@ -189,6 +199,7 @@ def main(args):
         cmd += "--epochs {} ".format(num_epochs)
         cmd += "--batch_size {} ".format(args.batch_size)
         cmd += "--kath_oversampling_rate {} ".format(args.kath_oversampling_rate)
+        cmd += "--prob_pow {} ".format(args.prob_pow)
         cmd += "--cutout "
         cmd += "--forwardlr "
         cmd += "--sb "
