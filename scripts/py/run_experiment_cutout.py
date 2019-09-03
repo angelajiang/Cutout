@@ -10,12 +10,11 @@ def set_experiment_default_args(parser):
     parser.add_argument('--calculator', '-c', default="relative", type=str, help='relative, random')
     parser.add_argument('--fp_selector', '-f', default="alwayson", type=str, help='alwayson, stale')
     parser.add_argument('--dataset', '-d', default="cifar10", type=str, choices=['svhn', 'cifar10', 'cifar100'])
-    parser.add_argument('--prob-pow', '-p', type=int, default=3, help='dictates SB selectivity')
+    parser.add_argument('--prob-pow', '-p', type=int, default=3, help='dictates SB and Kath selectivity')
     parser.add_argument('--profile', dest='profile', action='store_true',
                         help='turn profiling on')
     parser.add_argument('--num-trials', default=1, type=int, help='number of trials')
     parser.add_argument('--batch-size', '-b', default=128, type=int, help='batch size')
-    parser.add_argument('--kath-oversampling-rate', '-k', default=4, type=int, help='kath oversampling rate')
     parser.add_argument('--src-dir', default="./", type=str, help='/path/to/pytorch-cifar')
     #parser.add_argument('--dst-dir', default="/ssd/ahjiang/output/", type=str, help='/path/to/dst/dir')
     parser.add_argument('--dst-dir', default="/proj/BigLearning/ahjiang/output/", type=str, help='/path/to/dst/dir')
@@ -42,7 +41,7 @@ def get_max_history_length():
     return 1024
 
 def get_kath_strategy():
-    return "biased"
+    return "reweighted"
 
 def get_num_epochs(dataset, profile):
     if profile:
@@ -89,8 +88,15 @@ def get_length(dataset):
     elif dataset == "svhn":
         return 20
 
-def get_sample_size(batch_size, kath_oversampling_rate):
-    return batch_size * kath_oversampling_rate 
+def get_kath_oversampling_rate(prob_pow):
+    return prob_pow + 1
+
+def get_sample_size(strategy, batch_size, kath_oversampling_rate):
+    if strategy == "kath":
+        return batch_size * kath_oversampling_rate 
+    else:
+        return 1024
+
 def get_model():
     return "wideresnet"
 
@@ -161,7 +167,8 @@ def main(args):
     seeder = Seeder()
     src_dir = os.path.abspath(args.src_dir)
     sampling_min = get_sampling_min()
-    static_sample_size = get_sample_size(args.batch_size, args.kath_oversampling_rate)
+    kath_oversampling_rate = get_kath_oversampling_rate(args.prob_pow)
+    static_sample_size = get_sample_size(args.strategy, args.batch_size, kath_oversampling_rate)
     lr_file = get_learning_rate(args.dataset, args.accelerate_lr, args.decelerate_lr, args.custom_lr)
     length = get_length(args.dataset)
     model = get_model()
@@ -198,7 +205,7 @@ def main(args):
         cmd += "--length {} ".format(length)
         cmd += "--epochs {} ".format(num_epochs)
         cmd += "--batch_size {} ".format(args.batch_size)
-        cmd += "--kath_oversampling_rate {} ".format(args.kath_oversampling_rate)
+        cmd += "--kath_oversampling_rate {} ".format(kath_oversampling_rate)
         cmd += "--prob_pow {} ".format(args.prob_pow)
         cmd += "--cutout "
         cmd += "--forwardlr "
