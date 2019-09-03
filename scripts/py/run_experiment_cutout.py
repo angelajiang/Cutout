@@ -11,9 +11,6 @@ def set_experiment_default_args(parser):
     parser.add_argument('--fp_selector', '-f', default="alwayson", type=str, help='alwayson, stale')
     parser.add_argument('--dataset', '-d', default="cifar10", type=str, choices=['svhn', 'cifar10', 'cifar100'])
     parser.add_argument('--prob-pow', '-p', type=int, default=3, help='dictates SB selectivity')
-    parser.add_argument('--custom-lr', default=None, type=str)
-    parser.add_argument('--accelerate-lr', dest='accelerate_lr', action='store_true',
-                        help='Use hardcoded accelerated lr schedule')
     parser.add_argument('--profile', dest='profile', action='store_true',
                         help='turn profiling on')
     parser.add_argument('--num-trials', default=1, type=int, help='number of trials')
@@ -21,6 +18,12 @@ def set_experiment_default_args(parser):
     parser.add_argument('--src-dir', default="./", type=str, help='/path/to/pytorch-cifar')
     #parser.add_argument('--dst-dir', default="/ssd/ahjiang/output/", type=str, help='/path/to/dst/dir')
     parser.add_argument('--dst-dir', default="/proj/BigLearning/ahjiang/output/", type=str, help='/path/to/dst/dir')
+
+    parser.add_argument('--custom-lr', default=None, type=str)
+    parser.add_argument('--accelerate-lr', dest='accelerate_lr', action='store_true',
+                        help='Use hardcoded accelerated lr schedule')
+    parser.add_argument('--decelerate-lr', dest='decelerate_lr', action='store_true',
+                        help='Use hardcoded decelerated lr schedule')
     return parser
 
 class Seeder():
@@ -48,7 +51,7 @@ def get_num_epochs(dataset, profile):
     else:
         return 200
 
-def get_learning_rate(dataset, accelerate_lr, custom_lr):
+def get_learning_rate(dataset, accelerate_lr, decelerate_lr, custom_lr):
     if custom_lr is not None:
         return custom_lr
 
@@ -56,11 +59,18 @@ def get_learning_rate(dataset, accelerate_lr, custom_lr):
     base = "/users/ahjiang/src/Cutout/pytorch-cifar/data/config/sysml20/"
     if accelerate_lr:
         if dataset == "svhn":
-            return "{}/svhn/sampling-relative_svhn_wideresnet_0_128_1024_0.0005_trial1_seed1337_v4.lr".format(base)
+            return "{}/svhn/lr_sched_svhn_wideresnet_2x".format(base)
         elif dataset == "cifar10":
-            return "{}/cifar10/sampling_cifar10_wideresnet_0_128_1024_0.0005_trial1_seed1337_v4.lr".format(base)
+            return "{}/cifar10/lr_sched_cifar10_wideresnet_2x".format(base)
         elif dataset == "cifar100":
-            return "{}/cifar100/sampling-relative_cifar100_wideresnet_0_128_1024_0.0005_trial1_seed1337_v4.lr".format(base)
+            return "{}/cifar100/lr_sched_cifar100_wideresnet_2x".format(base)
+    elif decelerate_lr:
+        if dataset == "svhn":
+            return "{}/svhn/lr_sched_svhn_wideresnet_0.5x".format(base)
+        elif dataset == "cifar10":
+            return "{}/cifar10/lr_sched_cifar10_wideresnet_0.5x".format(base)
+        elif dataset == "cifar100":
+            return "{}/cifar100/lr_sched_cifar100_wideresnet_0.5x".format(base)
     else:
         if dataset == "svhn":
             return "{}/svhn/lr_sched_svhn_wideresnet".format(base)
@@ -151,7 +161,7 @@ def main(args):
     src_dir = os.path.abspath(args.src_dir)
     sampling_min = get_sampling_min()
     static_sample_size = get_sample_size(args.batch_size)
-    lr_file = get_learning_rate(args.dataset, args.accelerate_lr, args.custom_lr)
+    lr_file = get_learning_rate(args.dataset, args.accelerate_lr, args.decelerate_lr, args.custom_lr)
     length = get_length(args.dataset)
     model = get_model()
     num_epochs = get_num_epochs(args.dataset, args.profile)
