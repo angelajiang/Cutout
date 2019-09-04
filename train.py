@@ -70,7 +70,7 @@ parser.add_argument('--seed', type=int, default=0,
 parser.add_argument('--output_dir', default="./logs",
                     help='directory to place logs')
 
-parser.add_argument('--kath_oversampling_rate', type=int, default=0,
+parser.add_argument('--kath_oversampling_rate', type=float, default=0,
                     help='oversampling rate for kath')
 parser.add_argument('--prob_pow', type=float, default=3,
                     help='dictates SB selectivity')

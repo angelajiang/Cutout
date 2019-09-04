@@ -108,7 +108,7 @@ def get_kath_oversampling_rate(prob_pow):
 
 def get_sample_size(strategy, batch_size, kath_oversampling_rate):
     if strategy == "kath":
-        return batch_size * kath_oversampling_rate 
+        return int(batch_size * kath_oversampling_rate)
     else:
         return 1024
 
