@@ -72,7 +72,7 @@ parser.add_argument('--output_dir', default="./logs",
 
 parser.add_argument('--kath_oversampling_rate', type=int, default=0,
                     help='oversampling rate for kath')
-parser.add_argument('--prob_pow', type=int, default=3,
+parser.add_argument('--prob_pow', type=float, default=3,
                     help='dictates SB selectivity')
 parser.add_argument('--staleness', type=int, default=2,
                     help='Number of epochs to use stale losses for fp_selector')
