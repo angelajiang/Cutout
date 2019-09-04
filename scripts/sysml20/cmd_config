@@ -1,16 +1,14 @@
-h0.sb3.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py --decelerate-lr -s=nofilter -e 190830_lr2 -b 128 -d cifar100
-h1.sb3.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py --decelerate-lr -s=sb -e 190830_lr2 -b 128 -d cifar100
-h0.sb4.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py --decelerate-lr  -s=sb -c random -e 190830_lr2 -b 128 -d cifar100
-h0.sb5.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py --decelerate-lr -s=sb -f stale -e 190830_lr2 -b 128 -d cifar100
-h0.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py --decelerate-lr -s=nofilter -e 190830_lr2 -b 128 -d cifar10
-h1.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py --decelerate-lr -s=sb -e 190830_lr2 -b 128 -d cifar10
-h2.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py --decelerate-lr  -s=sb -c random -e 190830_lr2 -b 128 -d cifar10
-h3.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py --decelerate-lr -s=sb -f stale -e 190830_lr2 -b 128 -d cifar10
-h4.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -s=kath -e 190830_lr1 -b 128 -d cifar100
-h5.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -s=kath -e 190830_beta -b 128 -p 1 -d cifar10 
-h6.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -s=kath -e 190830_beta -b 128 -p 2 -d cifar10 
-h7.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -s=kath -e 190830_beta -b 128 -p 4 -d cifar10
-h8.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -s=kath -e 190830_lr1 -b 128 -d cifar10
-h9.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -s=kath -e 190830_beta -b 128 -p 1 -d cifar100
-h10.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -s=kath -e 190830_beta -b 128 -p 2 -d cifar100
-h11.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -s=kath -e 190830_beta -b 128 -p 4 -d cifar100 
+h0.sb4.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -b=128 -s=sb -e 190904_lr1 -f stale -p 1 -st 2 -d cifar10
+h0.sb5.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -b=128 -s=sb -e 190904_lr1 -f stale -p 2 -st 2 -d cifar10
+h0.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -b=128 -s=sb -e 190904_lr1 -f stale -p 3 -st 2 -d cifar10
+h1.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -b=128 -s=sb -e 190904_lr1 -f stale -p 4 -st 2 -d cifar10
+h2.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -b=128 -s=sb -e 190904_lr1 -f stale -p 0.5 -st 2 -d cifar100
+h3.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -b=128 -s=sb -e 190904_lr1 -f stale -p 1 -st 2 -d cifar100
+h4.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -b=128 -s=sb -e 190904_lr1 -f stale -p 2 -st 2 -d cifar100
+h5.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -b=128 -s=sb -e 190904_lr1 -f stale -p 3 -st 2 -d cifar100
+h6.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -b=128 -s=nofilter -e 190904_lr1 -d cifar10
+h7.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -b=128 -s=nofilter -e 190904_lr1 -d cifar100
+h8.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -b=128 -s=kath -e 190904_lr1 -p 1 -d cifar10
+h9.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -b=128 -s=kath -e 190904_lr1 -p 2 -d cifar10
+h10.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -b=128 -s=kath -e 190904_lr1 -p 3 -d cifar10
+h11.sb4-12.BigLearning.orca.pdl.cmu.edu ; python scripts/py/run_experiment_cutout.py -b=128 -s=kath -e 190904_lr1 -p 4 -d cifar10
