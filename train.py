@@ -49,8 +49,10 @@ parser.add_argument('--model', '-a', default='resnet18',
                     choices=model_options)
 parser.add_argument('--batch_size', type=int, default=128,
                     help='input batch size for training (default: 128)')
-parser.add_argument('--epochs', type=int, default=200,
-                    help='number of epochs to train (default: 20)')
+#parser.add_argument('--epochs', type=int, default=200,
+#                    help='number of epochs to train (default: 20)')
+parser.add_argument('--hours', type=float, default=12,
+                    help='number of hours to train (default: 12)')
 parser.add_argument('--learning_rate', type=float, default=0.1,
                     help='learning rate')
 parser.add_argument('--data_augmentation', action='store_true', default=False,
@@ -72,6 +74,8 @@ parser.add_argument('--kath_oversampling_rate', type=int, default=0,
                     help='oversampling rate for kath')
 parser.add_argument('--prob_pow', type=int, default=3,
                     help='dictates SB selectivity')
+parser.add_argument('--staleness', type=int, default=2,
+                    help='Number of epochs to use stale losses for fp_selector')
 parser.add_argument('--lr_sched', default=None,
                     help='path to file with manual lr schedule')
 parser.add_argument('--sb', action='store_true', default=False,
@@ -236,7 +240,8 @@ sb = SelectiveBackpropper(cnn,
                           args.strategy,
                           args.kath_oversampling_rate,
                           args.calculator,
-                          args.fp_selector)
+                          args.fp_selector,
+                          args.staleness)
 
 def test_sb(loader, epoch, sb):
     cnn.eval()    # Change model to 'eval' mode (BN uses moving mean/var).
@@ -304,8 +309,10 @@ def test(loader, epoch, num_images):
 
 
 stopped = False 
+epoch = -1
 
-for epoch in range(args.epochs):
+while (time.time() - start_time_seconds < args.hours * 3600.):
+    epoch += 1
 
     if args.sb:
         if stopped: break
