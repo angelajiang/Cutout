@@ -19,6 +19,8 @@ def set_experiment_default_args(parser):
     #parser.add_argument('--dst-dir', default="/ssd/ahjiang/output/", type=str, help='/path/to/dst/dir')
     parser.add_argument('--dst-dir', default="/proj/BigLearning/ahjiang/output/", type=str, help='/path/to/dst/dir')
 
+    parser.add_argument('--long-run', dest='long_run', action='store_true',
+                        help='Double number of epochs')
     parser.add_argument('--custom-lr', default=None, type=str)
     parser.add_argument('--accelerate-lr', dest='accelerate_lr', action='store_true',
                         help='Use hardcoded accelerated lr schedule')
@@ -41,16 +43,16 @@ def get_max_history_length():
     return 1024
 
 def get_kath_strategy():
-    return "reweighted"
+    return "biased"
 
-def get_num_epochs(dataset, profile, decelerate_lr):
+def get_num_epochs(dataset, profile, decelerate_lr, long_run):
     if profile:
         return 3
     if dataset == "svhn":
         base = 160
     else:
         base = 200
-    if decelerate_lr:
+    if decelerate_lr or long_run:
         base = base * 2
     return base
 
@@ -175,7 +177,7 @@ def main(args):
     lr_file = get_learning_rate(args.dataset, args.accelerate_lr, args.decelerate_lr, args.custom_lr)
     length = get_length(args.dataset)
     model = get_model()
-    num_epochs = get_num_epochs(args.dataset, args.profile, args.decelerate_lr)
+    num_epochs = get_num_epochs(args.dataset, args.profile, args.decelerate_lr, args.long_run)
     kath_strategy = get_kath_strategy()
     max_history_length = get_max_history_length()
     output_dir, pickles_dir = get_experiment_dirs(args.dst_dir, args.dataset, args.expname)
