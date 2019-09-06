@@ -11,7 +11,7 @@ def set_experiment_default_args(parser):
     parser.add_argument('--fp_selector', '-f', default="alwayson", type=str, help='alwayson, stale')
     parser.add_argument('--dataset', '-d', default="cifar10", type=str, choices=['svhn', 'cifar10', 'cifar100'])
     parser.add_argument('--prob-pow', '-p', type=float, default=3, help='dictates SB and Kath selectivity')
-    parser.add_argument('--num-hours', '-h', type=float, default=12, help='training hours to run')
+    parser.add_argument('--num-hours', '-hr', type=float, default=12, help='training hours to run')
     parser.add_argument('--staleness', '-st', type=int, default=2, help='arg for stale fp_selector')
     parser.add_argument('--profile', dest='profile', action='store_true',
                         help='turn profiling on')
