@@ -32,6 +32,7 @@ from lib.SelectiveBackpropper import SelectiveBackpropper
 #import main as sb
 import lib.cifar
 import lib.datasets
+import lib.loggers
 import lib.svhn
 
 start_time_seconds = time.time()
@@ -81,6 +82,7 @@ parser.add_argument('--forwardlr', dest='forwardlr', action='store_true',
 parser.add_argument('--strategy', default='nofilter', choices=strategy_options)
 parser.add_argument('--calculator', default='relative', choices=calculator_options)
 parser.add_argument('--fp_selector', default='alwayson', choices=fp_selector_options)
+parser.add_argument('--pickle_dir', '-pd', default='./logs/pickles/')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -238,7 +240,7 @@ sb = SelectiveBackpropper(cnn,
                           args.calculator,
                           args.fp_selector)
 
-def test_sb(loader, epoch, sb):
+def test_sb(loader, epoch, sb, confidence_logger=None):
     cnn.eval()    # Change model to 'eval' mode (BN uses moving mean/var).
     correct = 0.
     total = 0.
@@ -248,13 +250,24 @@ def test_sb(loader, epoch, sb):
         labels = labels.cuda()
 
         with torch.no_grad():
-            pred = cnn(images)
-            loss = nn.CrossEntropyLoss()(pred, labels)
+            output = cnn(images)
+            loss = nn.CrossEntropyLoss()(output, labels)
             test_loss += loss.item()
 
-        pred = torch.max(pred.data, 1)[1]
+        pred = torch.max(output.data, 1)[1]
         total += labels.size(0)
         correct += (pred == labels).sum().item()
+
+        if confidence_logger is not None:
+            _, predicted = output.max(1)
+            softmax_outputs = nn.Softmax()(output)
+            labels_array = labels.cpu().numpy()
+            outputs_array = softmax_outputs.cpu().numpy()
+            confidences = [o[t] for t, o in zip(labels_array, outputs_array)]
+            results = predicted.eq(labels).data.cpu().numpy().tolist()
+            confidence_logger.update_target_confidences(epoch, confidences, results, sb.logger.global_num_backpropped)
+    if confidence_logger is not None:
+        confidence_logger.write_summaries_maybe(epoch)
 
     test_loss /= total
     val_acc = correct / total
@@ -304,6 +317,7 @@ def test(loader, epoch, num_images):
 
 
 stopped = False 
+confidence_logger = lib.loggers.TargetConfidenceLogger(args.pickle_dir)
 
 for epoch in range(args.epochs):
 
@@ -318,7 +332,7 @@ for epoch in range(args.epochs):
 
         sb.next_epoch()
         sb.next_partition()
-        test_acc = test_sb(test_loader, epoch, sb)
+        test_acc = test_sb(test_loader, epoch, sb, confidence_logger)
 
     else:
         xentropy_loss_avg = 0.
