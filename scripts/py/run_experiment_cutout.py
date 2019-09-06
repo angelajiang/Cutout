@@ -11,6 +11,7 @@ def set_experiment_default_args(parser):
     parser.add_argument('--fp_selector', '-f', default="alwayson", type=str, help='alwayson, stale')
     parser.add_argument('--dataset', '-d', default="cifar10", type=str, choices=['svhn', 'cifar10', 'cifar100'])
     parser.add_argument('--prob-pow', '-p', type=float, default=3, help='dictates SB and Kath selectivity')
+    parser.add_argument('--num-hours', '-h', type=float, default=12, help='training hours to run')
     parser.add_argument('--staleness', '-st', type=int, default=2, help='arg for stale fp_selector')
     parser.add_argument('--profile', dest='profile', action='store_true',
                         help='turn profiling on')
@@ -54,15 +55,6 @@ def get_num_epochs(dataset, profile, static_lr, long_run):
     else:
         base = 200
     return base
-
-def get_num_hours(dataset, profile):
-    if profile:
-        return 0.5
-    if dataset == "svhn":
-        hours = 96
-    else:
-        hours = 12
-    return hours
 
 def get_learning_rate(dataset, accelerate_lr, static_lr, custom_lr):
     if custom_lr is not None:
@@ -190,7 +182,6 @@ def main(args):
     length = get_length(args.dataset)
     model = get_model()
     num_epochs = get_num_epochs(args.dataset, args.profile, args.static_lr, args.long_run)
-    num_hours = get_num_hours(args.dataset, args.profile)
     kath_strategy = get_kath_strategy()
     max_history_length = get_max_history_length()
     output_dir, pickles_dir = get_experiment_dirs(args.dst_dir, args.dataset, args.expname)
@@ -222,7 +213,7 @@ def main(args):
         cmd += "--model {} ".format(model)
         cmd += "--lr_sched {} ".format(lr_file)
         cmd += "--length {} ".format(length)
-        cmd += "--hours {} ".format(num_hours)
+        cmd += "--hours {} ".format(args.num_hours)
         cmd += "--batch_size {} ".format(args.batch_size)
         cmd += "--kath_oversampling_rate {} ".format(kath_oversampling_rate)
         cmd += "--prob_pow {} ".format(args.prob_pow)
