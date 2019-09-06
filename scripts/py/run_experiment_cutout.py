@@ -25,7 +25,7 @@ def set_experiment_default_args(parser):
     parser.add_argument('--custom-lr', default=None, type=str)
     parser.add_argument('--accelerate-lr', dest='accelerate_lr', action='store_true',
                         help='Use hardcoded accelerated lr schedule')
-    parser.add_argument('--decelerate-lr', dest='decelerate_lr', action='store_true',
+    parser.add_argument('--static-lr', dest='static_lr', action='store_true',
                         help='Use hardcoded decelerated lr schedule')
     return parser
 
@@ -46,15 +46,13 @@ def get_max_history_length():
 def get_kath_strategy():
     return "biased"
 
-def get_num_epochs(dataset, profile, decelerate_lr, long_run):
+def get_num_epochs(dataset, profile, static_lr, long_run):
     if profile:
         return 3
     if dataset == "svhn":
         base = 160
     else:
         base = 200
-    if decelerate_lr or long_run:
-        base = base * 2
     return base
 
 def get_num_hours(dataset, profile):
@@ -66,27 +64,27 @@ def get_num_hours(dataset, profile):
         hours = 12
     return hours
 
-def get_learning_rate(dataset, accelerate_lr, decelerate_lr, custom_lr):
+def get_learning_rate(dataset, accelerate_lr, static_lr, custom_lr):
     if custom_lr is not None:
         return custom_lr
 
     base = "/home/ahjiang/Cutout/pytorch-cifar/data/config/sysml20/"
     base = "/users/ahjiang/src/Cutout/pytorch-cifar/data/config/sysml20/"
 
-    if decelerate_lr:
+    if static_lr:
         if dataset == "svhn":
-            return "{}/svhn/lr_sched_svhn_wideresnet_2x".format(base)
+            return "{}/svhn/lr_sched_svhn_wideresnet_static".format(base)
         elif dataset == "cifar10":
-            return "{}/cifar10/lr_sched_cifar10_wideresnet_2x".format(base)
+            return "{}/cifar10/lr_sched_cifar10_wideresnet_static".format(base)
         elif dataset == "cifar100":
-            return "{}/cifar100/lr_sched_cifar100_wideresnet_2x".format(base)
+            return "{}/cifar100/lr_sched_cifar100_wideresnet_static".format(base)
     elif accelerate_lr:
         if dataset == "svhn":
-            return "{}/svhn/lr_sched_svhn_wideresnet_0.5x".format(base)
+            return "{}/svhn/lr_sched_svhn_wideresnet_0.8x".format(base)
         elif dataset == "cifar10":
-            return "{}/cifar10/lr_sched_cifar10_wideresnet_0.5x".format(base)
+            return "{}/cifar10/lr_sched_cifar10_wideresnet_0.8x".format(base)
         elif dataset == "cifar100":
-            return "{}/cifar100/lr_sched_cifar100_wideresnet_0.5x".format(base)
+            return "{}/cifar100/lr_sched_cifar100_wideresnet_0.8x".format(base)
     else:
         if dataset == "svhn":
             return "{}/svhn/lr_sched_svhn_wideresnet".format(base)
@@ -188,10 +186,10 @@ def main(args):
     sampling_min = get_sampling_min()
     kath_oversampling_rate = get_kath_oversampling_rate(args.prob_pow)
     static_sample_size = get_sample_size(args.strategy, args.batch_size, kath_oversampling_rate)
-    lr_file = get_learning_rate(args.dataset, args.accelerate_lr, args.decelerate_lr, args.custom_lr)
+    lr_file = get_learning_rate(args.dataset, args.accelerate_lr, args.static_lr, args.custom_lr)
     length = get_length(args.dataset)
     model = get_model()
-    num_epochs = get_num_epochs(args.dataset, args.profile, args.decelerate_lr, args.long_run)
+    num_epochs = get_num_epochs(args.dataset, args.profile, args.static_lr, args.long_run)
     num_hours = get_num_hours(args.dataset, args.profile)
     kath_strategy = get_kath_strategy()
     max_history_length = get_max_history_length()
