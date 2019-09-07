@@ -28,6 +28,7 @@ from model.wide_resnet import WideResNet
 
 
 sys.path.insert(0, "/home/ahjiang/Cutout/pytorch-cifar")
+sys.path.insert(0, "/home/ahjiang/async/Cutout/pytorch-cifar")
 from lib.SelectiveBackpropper import SelectiveBackpropper
 #import main as sb
 import lib.cifar
@@ -40,6 +41,7 @@ from copy import deepcopy
 
 
 def main():
+    print("here1")
     torch.multiprocessing.set_start_method('spawn', force=True)
     torch.multiprocessing.freeze_support()
 
@@ -109,6 +111,7 @@ def main():
     if args.cuda:
         torch.cuda.manual_seed(args.seed)
 
+    print("here2")
 
     print(args)
 
@@ -129,6 +132,9 @@ def main():
         filename = args.output_dir + "/" + test_id + '.csv'
         dataset_lib = datasets
 
+    print("here3")
+
+
 
 # Image Preprocessing
     if args.dataset == 'svhn':
@@ -137,6 +143,8 @@ def main():
     else:
         normalize = transforms.Normalize(mean=[x / 255.0 for x in [125.3, 123.0, 113.9]],
                                          std=[x / 255.0 for x in [63.0, 62.1, 66.7]])
+
+    print("here4")
 
     train_transform = transforms.Compose([])
     if args.data_augmentation:
@@ -147,10 +155,13 @@ def main():
     if args.cutout:
         train_transform.transforms.append(Cutout(n_holes=args.n_holes, length=args.length))
 
+    print("here5")
 
     test_transform = transforms.Compose([
         transforms.ToTensor(),
         normalize])
+
+    print("here6")
 
     if args.dataset == 'cifar10':
         num_classes = 10
@@ -196,6 +207,7 @@ def main():
                                         split='test',
                                         transform=test_transform,
                                         download=True)
+    print("here7")
 
 # Data Loader (Input Pipeline)
     static_dataset = [a for a in train_dataset]
@@ -206,12 +218,12 @@ def main():
                                                shuffle=True,
                                                pin_memory=True,
                                                num_workers=2)
-
     test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
                                               batch_size=args.batch_size,
                                               shuffle=False,
                                               pin_memory=True,
                                               num_workers=2)
+    print("here8")
 
     if args.model == 'resnet18':
         cnn = ResNet18(num_classes=num_classes)
@@ -223,10 +235,12 @@ def main():
             cnn = WideResNet(depth=28, num_classes=num_classes, widen_factor=10,
                              dropRate=0.3)
 
+    print("here9")
     cnn = cnn.cuda()
     criterion = nn.CrossEntropyLoss().cuda()
     cnn_optimizer = torch.optim.SGD(cnn.parameters(), lr=args.learning_rate,
                                     momentum=0.9, nesterov=True, weight_decay=5e-4)
+    print("here10")
 
     if args.dataset == 'svhn':
         scheduler = MultiStepLR(cnn_optimizer, milestones=[80, 120], gamma=0.1)
@@ -250,6 +264,7 @@ def main():
                               args.calculator,
                               args.fp_selector)
 
+    print("here11")
 
 
     def test_sb(loader, epoch, sb):
@@ -319,7 +334,6 @@ def main():
 
 
     stopped = False 
-
     for epoch in range(args.epochs):
 
         if args.sb:
