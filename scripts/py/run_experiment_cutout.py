@@ -44,6 +44,7 @@ def get_kath_strategy():
     return "reweighted"
 
 def get_num_epochs(dataset, profile):
+    return 3
     if profile:
         return 3
     if dataset == "svhn":
@@ -214,9 +215,13 @@ def main(args):
         cmd += "--calculator {} ".format(args.calculator)
         cmd += "--fp_selector {} ".format(args.fp_selector)
 
-        cmd = cmd.strip()
+        #cmd = cmd.strip()
 
         output_path = os.path.join(output_dir, output_file)
+	
+	cmd += " > {} ".format(output_path)
+	cmd = cmd.strip()
+
         print("========================================================================")
         print(cmd)
         print("------------------------------------------------------------------------")
@@ -225,9 +230,10 @@ def main(args):
         with open(os.path.join(pickles_dir, output_file) + "_cmd", "w+") as f:
             f.write(cmd)
 
-        cmd_list = cmd.split(" ")
-        with open(output_path, "w+") as f:
-            subprocess.call(cmd_list, stdout=f)
+        #cmd_list = cmd.split(" ")
+        subprocess.call(cmd, shell=True)
+#        with open(output_path, "w+") as f:
+#            subprocess.call(cmd_list, stdout=f)
 
 
 if __name__ == '__main__':

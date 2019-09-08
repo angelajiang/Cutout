@@ -25,9 +25,14 @@ from util.cutout import Cutout
 from model.resnet import ResNet18
 from model.wide_resnet import WideResNet
 
+import datetime
 
-sys.path.insert(0, "/users/ahjiang/src/Cutout/pytorch-cifar")
-sys.path.insert(0, "/home/ahjiang/Cutout/pytorch-cifar")
+PROFILE_TIMING = True
+PROFILE_TIMING_SYNC = True
+
+sys.path.insert(0, "/users/dlwong/src/sb/Cutout/pytorch-cifar")
+#sys.path.insert(0, "/users/ahjiang/src/Cutout/pytorch-cifar")
+#sys.path.insert(0, "/home/ahjiang/Cutout/pytorch-cifar")
 from lib.SelectiveBackpropper import SelectiveBackpropper
 #import main as sb
 import lib.cifar
@@ -35,6 +40,9 @@ import lib.datasets
 import lib.svhn
 
 start_time_seconds = time.time()
+
+def get_epochtime_ms():
+    return int((datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1)).total_seconds() * 1000) 
 
 model_options = ['resnet18', 'wideresnet']
 strategy_options = ['nofilter', 'sb', 'kath']
@@ -180,7 +188,7 @@ elif args.dataset == 'svhn':
     train_dataset.data = data
     train_dataset.labels = labels
 
-    test_dataset = dataset_lib.SVHN(root='/ssd/datasets/svhn/',
+    test_dataset = dataset_lib.SVHN(root="data/", #root='/ssd/datasets/svhn/',
                                     split='test',
                                     transform=test_transform,
                                     download=True)
@@ -304,12 +312,13 @@ def test(loader, epoch, num_images):
 
 
 stopped = False 
-
+print("asd")
 for epoch in range(args.epochs):
+    print("asdasad")
 
     if args.sb:
         if stopped: break
-
+        print("asdqweqwe")
         sb.trainer.train(train_loader)
 
         if sb.trainer.stopped:
@@ -321,6 +330,7 @@ for epoch in range(args.epochs):
         test_acc = test_sb(test_loader, epoch, sb)
 
     else:
+        print("asdasdqweqw")
         xentropy_loss_avg = 0.
         correct = 0.
         total = 0.
@@ -329,14 +339,38 @@ for epoch in range(args.epochs):
         for i, (images, labels) in enumerate(train_loader):
             #progress_bar.set_description('Epoch ' + str(epoch))
 
+            if PROFILE_TIMING:
+                print("[python] ===epoch: {}".format(get_epochtime_ms()))
+
             images = images.cuda()
             labels = labels.cuda()
 
+            if PROFILE_TIMING:
+                print("[python] ===forward-nograd: {}".format(get_epochtime_ms()))
+            with torch.no_grad():
+                pred = cnn(images)
+            if PROFILE_TIMING:
+                if PROFILE_TIMING_SYNC:
+                    torch.cuda.synchronize()
+                print("[python] forward-nograd===: {}".format(get_epochtime_ms()))
+
             cnn.zero_grad()
+            if PROFILE_TIMING:
+                print("[python] ===forward: {}".format(get_epochtime_ms()))
             pred = cnn(images)
+            if PROFILE_TIMING:
+                if PROFILE_TIMING_SYNC:
+                    torch.cuda.synchronize()
+                print("[python] forward===: {}".format(get_epochtime_ms()))
 
             xentropy_loss = criterion(pred, labels)
+            if PROFILE_TIMING:
+                print("[python] ===backward: {}".format(get_epochtime_ms()))
             xentropy_loss.backward()
+            if PROFILE_TIMING:
+                if PROFILE_TIMING_SYNC:
+                    torch.cuda.synchronize()
+                print("[python] backward===: {}".format(get_epochtime_ms()))
             cnn_optimizer.step()
 
             xentropy_loss_avg += xentropy_loss.item()
@@ -350,6 +384,11 @@ for epoch in range(args.epochs):
             print("Epoch: {} Acc: {:.3f} Loss: {:.3f}".format(epoch,
                                                               accuracy,
                                                               xentropy_loss_avg))
+
+            if PROFILE_TIMING:
+                print("[python] epoch===: {}".format(get_epochtime_ms()))
+            sys.stdout.flush()
+
 
             #progress_bar.set_postfix(
             #    xentropy='%.3f' % (xentropy_loss_avg / (i + 1)),
