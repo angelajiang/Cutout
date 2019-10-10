@@ -104,7 +104,7 @@ if args.sb:
     if args.dataset == 'cifar10' or args.dataset == 'cifar100':
         dataset_lib = lib.cifar
     elif args.dataset == 'svhn':
-        dataset_lib = lib.svhn
+        dataset_lib = lib.svha
     else:
         print("{} dataset not supported with SB".format(args.dataset))
         exit()
@@ -142,6 +142,7 @@ if args.dataset == 'cifar10':
                                         root="data/",
                                         train=True,
                                         transform=train_transform,
+                                        randomize_labels=0.1,
                                         download=True)
 
     test_dataset = dataset_lib.CIFAR10(#root='/ssd/datasets/cifar10/',
@@ -332,7 +333,7 @@ for epoch in range(args.epochs):
 
         sb.next_epoch()
         sb.next_partition()
-        test_acc = test_sb(test_loader, epoch, sb, confidence_logger)
+        test_acc = test_sb(test_loader, epoch, sb, None)
 
     else:
         xentropy_loss_avg = 0.
