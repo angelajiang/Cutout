@@ -10,7 +10,9 @@ def set_experiment_default_args(parser):
     parser.add_argument('--calculator', '-c', default="relative", type=str, help='relative, random')
     parser.add_argument('--fp_selector', '-f', default="alwayson", type=str, help='alwayson, stale')
     parser.add_argument('--dataset', '-d', default="cifar10", type=str, choices=['svhn', 'cifar10', 'cifar100'])
-    parser.add_argument('--prob-pow', '-p', type=int, default=3, help='dictates SB and Kath selectivity')
+    parser.add_argument('--prob-pow', '-p', type=float, default=3, help='dictates SB and Kath selectivity')
+    parser.add_argument('--num-hours', '-hr', type=float, default=12, help='training hours to run')
+    parser.add_argument('--staleness', '-st', type=int, default=2, help='arg for stale fp_selector')
     parser.add_argument('--profile', dest='profile', action='store_true',
                         help='turn profiling on')
     parser.add_argument('--num-trials', default=1, type=int, help='number of trials')
@@ -19,10 +21,12 @@ def set_experiment_default_args(parser):
     #parser.add_argument('--dst-dir', default="/ssd/ahjiang/output/", type=str, help='/path/to/dst/dir')
     parser.add_argument('--dst-dir', default="/proj/BigLearning/ahjiang/output/", type=str, help='/path/to/dst/dir')
 
+    parser.add_argument('--long-run', dest='long_run', action='store_true',
+                        help='Double number of epochs')
     parser.add_argument('--custom-lr', default=None, type=str)
     parser.add_argument('--accelerate-lr', dest='accelerate_lr', action='store_true',
                         help='Use hardcoded accelerated lr schedule')
-    parser.add_argument('--decelerate-lr', dest='decelerate_lr', action='store_true',
+    parser.add_argument('--static-lr', dest='static_lr', action='store_true',
                         help='Use hardcoded decelerated lr schedule')
     return parser
 
@@ -41,40 +45,38 @@ def get_max_history_length():
     return 1024
 
 def get_kath_strategy():
-    return "reweighted"
+    return "biased"
 
-def get_num_epochs(dataset, profile, decelerate_lr):
+def get_num_epochs(dataset, profile, static_lr, long_run):
     if profile:
         return 3
     if dataset == "svhn":
         base = 160
     else:
         base = 200
-    if decelerate_lr:
-        base = base * 2
     return base
 
-def get_learning_rate(dataset, accelerate_lr, decelerate_lr, custom_lr):
+def get_learning_rate(dataset, accelerate_lr, static_lr, custom_lr):
     if custom_lr is not None:
         return custom_lr
 
     base = "/home/ahjiang/Cutout/pytorch-cifar/data/config/sysml20/"
     base = "/users/ahjiang/src/Cutout/pytorch-cifar/data/config/sysml20/"
 
-    if decelerate_lr:
+    if static_lr:
         if dataset == "svhn":
-            return "{}/svhn/lr_sched_svhn_wideresnet_2x".format(base)
+            return "{}/svhn/lr_sched_svhn_wideresnet_static".format(base)
         elif dataset == "cifar10":
-            return "{}/cifar10/lr_sched_cifar10_wideresnet_2x".format(base)
+            return "{}/cifar10/lr_sched_cifar10_wideresnet_static".format(base)
         elif dataset == "cifar100":
-            return "{}/cifar100/lr_sched_cifar100_wideresnet_2x".format(base)
+            return "{}/cifar100/lr_sched_cifar100_wideresnet_static".format(base)
     elif accelerate_lr:
         if dataset == "svhn":
-            return "{}/svhn/lr_sched_svhn_wideresnet_0.5x".format(base)
+            return "{}/svhn/lr_sched_svhn_wideresnet_0.8x".format(base)
         elif dataset == "cifar10":
-            return "{}/cifar10/lr_sched_cifar10_wideresnet_0.5x".format(base)
+            return "{}/cifar10/lr_sched_cifar10_wideresnet_0.8x".format(base)
         elif dataset == "cifar100":
-            return "{}/cifar100/lr_sched_cifar100_wideresnet_0.5x".format(base)
+            return "{}/cifar100/lr_sched_cifar100_wideresnet_0.8x".format(base)
     else:
         if dataset == "svhn":
             return "{}/svhn/lr_sched_svhn_wideresnet".format(base)
@@ -96,7 +98,7 @@ def get_kath_oversampling_rate(prob_pow):
 
 def get_sample_size(strategy, batch_size, kath_oversampling_rate):
     if strategy == "kath":
-        return batch_size * kath_oversampling_rate 
+        return int(batch_size * kath_oversampling_rate)
     else:
         return 1024
 
@@ -123,7 +125,8 @@ def get_output_files(strategy,
                      trial,
                      seed,
                      kath_strategy,
-                     static_sample_size):
+                     static_sample_size,
+                     staleness):
 
     if strategy == "kath":
         identifier = "kath-{}".format(kath_strategy)
@@ -134,7 +137,10 @@ def get_output_files(strategy,
         identifier = "topk"
         max_history_length = static_sample_size
     elif strategy == "sb":
-        identifier = "{}-{}-{}".format(strategy, calculator, fp_selector)
+        if fp_selector == "stale":
+            identifier = "{}-{}-{}{}".format(strategy, calculator, fp_selector, staleness)
+        else:
+            identifier = "{}-{}-{}".format(strategy, calculator, fp_selector)
 
     output_file = "{}_{}_{}_{}_{}_{}_{}_trial{}_seed{}_v5".format(identifier,
                                                                   dataset,
@@ -172,10 +178,10 @@ def main(args):
     sampling_min = get_sampling_min()
     kath_oversampling_rate = get_kath_oversampling_rate(args.prob_pow)
     static_sample_size = get_sample_size(args.strategy, args.batch_size, kath_oversampling_rate)
-    lr_file = get_learning_rate(args.dataset, args.accelerate_lr, args.decelerate_lr, args.custom_lr)
+    lr_file = get_learning_rate(args.dataset, args.accelerate_lr, args.static_lr, args.custom_lr)
     length = get_length(args.dataset)
     model = get_model()
-    num_epochs = get_num_epochs(args.dataset, args.profile, args.decelerate_lr)
+    num_epochs = get_num_epochs(args.dataset, args.profile, args.static_lr, args.long_run)
     kath_strategy = get_kath_strategy()
     max_history_length = get_max_history_length()
     output_dir, pickles_dir = get_experiment_dirs(args.dst_dir, args.dataset, args.expname)
@@ -195,7 +201,8 @@ def main(args):
                                                     trial,
                                                     seed,
                                                     kath_strategy,
-                                                    static_sample_size)
+                                                    static_sample_size,
+                                                    args.staleness)
         if args.profile:
             cmd = "python -m cProfile -o {}/{}.prof train.py ".format(output_dir, args.expname)
         else:
@@ -206,10 +213,11 @@ def main(args):
         cmd += "--model {} ".format(model)
         cmd += "--lr_sched {} ".format(lr_file)
         cmd += "--length {} ".format(length)
-        cmd += "--epochs {} ".format(num_epochs)
+        cmd += "--hours {} ".format(args.num_hours)
         cmd += "--batch_size {} ".format(args.batch_size)
         cmd += "--kath_oversampling_rate {} ".format(kath_oversampling_rate)
         cmd += "--prob_pow {} ".format(args.prob_pow)
+        cmd += "--staleness {} ".format(args.staleness)
         cmd += "--cutout "
         cmd += "--forwardlr "
         cmd += "--sb "
