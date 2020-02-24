@@ -7,15 +7,18 @@ import subprocess
 def set_experiment_default_args(parser):
     parser.add_argument('--expname', '-e', default="tmp", type=str, help='experiment name')
     parser.add_argument('--strategy', '-s', default="nofilter", type=str, help='nofilter, sb, kath')
-    parser.add_argument('--calculator', '-c', default="relative", type=str, help='relative, random')
+    parser.add_argument('--calculator', '-c', default="relative", type=str, help='relative, spline, random')
     parser.add_argument('--fp_selector', '-f', default="alwayson", type=str, help='alwayson, stale')
     parser.add_argument('--dataset', '-d', default="cifar10", type=str, choices=['svhn', 'cifar10', 'cifar100'])
     parser.add_argument('--prob-pow', '-p', type=float, default=3, help='dictates SB and Kath selectivity')
+    parser.add_argument('--spline-y1', '-y1', type=float, default=1, help='y point for spline transform')
+    parser.add_argument('--spline-y2', '-y2', type=float, default=1, help='y point for spline transform')
+    parser.add_argument('--spline-y3', '-y3', type=float, default=1, help='y point for spline transform')
     parser.add_argument('--num-hours', '-hr', type=float, default=12, help='training hours to run')
     parser.add_argument('--staleness', '-st', type=int, default=2, help='arg for stale fp_selector')
     parser.add_argument('--profile', dest='profile', action='store_true',
                         help='turn profiling on')
-    parser.add_argument('--num-trials', default=1, type=int, help='number of trials')
+    parser.add_argument('--trial', default=1, type=int, help='trial id')
     parser.add_argument('--batch-size', '-b', default=128, type=int, help='batch size')
     parser.add_argument('--src-dir', default="./", type=str, help='/path/to/pytorch-cifar')
     #parser.add_argument('--dst-dir', default="/ssd/ahjiang/output/", type=str, help='/path/to/dst/dir')
@@ -187,58 +190,60 @@ def main(args):
     output_dir, pickles_dir = get_experiment_dirs(args.dst_dir, args.dataset, args.expname)
     assert(args.strategy in ["nofilter", "sb", "kath"])
 
-    for trial in range(1, args.num_trials+1):
-        seed = seeder.get_seed()
-        output_file, pickle_file = get_output_files(args.strategy,
-                                                    args.calculator,
-                                                    args.fp_selector,
-                                                    args.dataset,
-                                                    model,
-                                                    sampling_min,
-                                                    args.batch_size,
-                                                    max_history_length,
-                                                    args.prob_pow,
-                                                    trial,
-                                                    seed,
-                                                    kath_strategy,
-                                                    static_sample_size,
-                                                    args.staleness)
-        if args.profile:
-            cmd = "python -m cProfile -o {}/{}.prof train.py ".format(output_dir, args.expname)
-        else:
-            cmd = "python train.py "
-        if args.dataset in ["cifar10", "cifar100"]:
-            cmd += "--data_augmentation "
-        cmd += "--dataset {} ".format(args.dataset)
-        cmd += "--model {} ".format(model)
-        cmd += "--lr_sched {} ".format(lr_file)
-        cmd += "--length {} ".format(length)
-        cmd += "--hours {} ".format(args.num_hours)
-        cmd += "--batch_size {} ".format(args.batch_size)
-        cmd += "--kath_oversampling_rate {} ".format(kath_oversampling_rate)
-        cmd += "--prob_pow {} ".format(args.prob_pow)
-        cmd += "--staleness {} ".format(args.staleness)
-        cmd += "--cutout "
-        cmd += "--forwardlr "
-        cmd += "--sb "
-        cmd += "--strategy {} ".format(args.strategy)
-        cmd += "--calculator {} ".format(args.calculator)
-        cmd += "--fp_selector {} ".format(args.fp_selector)
+    seed = seeder.get_seed()
+    output_file, pickle_file = get_output_files(args.strategy,
+                                                args.calculator,
+                                                args.fp_selector,
+                                                args.dataset,
+                                                model,
+                                                sampling_min,
+                                                args.batch_size,
+                                                max_history_length,
+                                                args.prob_pow,
+                                                args.trial,
+                                                seed,
+                                                kath_strategy,
+                                                static_sample_size,
+                                                args.staleness)
+    if args.profile:
+        cmd = "python -m cProfile -o {}/{}.prof train.py ".format(output_dir, args.expname)
+    else:
+        cmd = "python train.py "
+    if args.dataset in ["cifar10", "cifar100"]:
+        cmd += "--data_augmentation "
+    cmd += "--dataset {} ".format(args.dataset)
+    cmd += "--model {} ".format(model)
+    cmd += "--lr_sched {} ".format(lr_file)
+    cmd += "--length {} ".format(length)
+    cmd += "--hours {} ".format(args.num_hours)
+    cmd += "--batch_size {} ".format(args.batch_size)
+    cmd += "--kath_oversampling_rate {} ".format(kath_oversampling_rate)
+    cmd += "--prob_pow {} ".format(args.prob_pow)
+    cmd += "--spline_y1 {} ".format(args.spline_y1)
+    cmd += "--spline_y2 {} ".format(args.spline_y2)
+    cmd += "--spline_y3 {} ".format(args.spline_y3)
+    cmd += "--staleness {} ".format(args.staleness)
+    cmd += "--cutout "
+    cmd += "--forwardlr "
+    cmd += "--sb "
+    cmd += "--strategy {} ".format(args.strategy)
+    cmd += "--calculator {} ".format(args.calculator)
+    cmd += "--fp_selector {} ".format(args.fp_selector)
 
-        cmd = cmd.strip()
+    cmd = cmd.strip()
 
-        output_path = os.path.join(output_dir, output_file)
-        print("========================================================================")
-        print(cmd)
-        print("------------------------------------------------------------------------")
-        print(output_path)
+    output_path = os.path.join(output_dir, output_file)
+    print("========================================================================")
+    print(cmd)
+    print("------------------------------------------------------------------------")
+    print(output_path)
 
-        with open(os.path.join(pickles_dir, output_file) + "_cmd", "w+") as f:
-            f.write(cmd)
+    with open(os.path.join(pickles_dir, output_file) + "_cmd", "w+") as f:
+        f.write(cmd)
 
-        cmd_list = cmd.split(" ")
-        with open(output_path, "w+") as f:
-            subprocess.call(cmd_list, stdout=f)
+    cmd_list = cmd.split(" ")
+    with open(output_path, "w+") as f:
+        subprocess.call(cmd_list, stdout=f)
 
 
 if __name__ == '__main__':

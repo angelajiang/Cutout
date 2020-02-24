@@ -37,9 +37,9 @@ import lib.svhn
 start_time_seconds = time.time()
 
 model_options = ['resnet18', 'wideresnet']
-strategy_options = ['nofilter', 'sb', 'kath']
 dataset_options = ['cifar10', 'cifar100', 'svhn']
-calculator_options = ['relative', 'random', 'hybrid']
+strategy_options = ['nofilter', 'sb', 'kath']
+calculator_options = ['relative', 'spline', 'random', 'hybrid']
 fp_selector_options = ['alwayson', 'stale']
 
 parser = argparse.ArgumentParser(description='CNN')
@@ -74,6 +74,12 @@ parser.add_argument('--kath_oversampling_rate', type=float, default=0,
                     help='oversampling rate for kath')
 parser.add_argument('--prob_pow', type=float, default=3,
                     help='dictates SB selectivity')
+parser.add_argument('--spline_y1', type=float, default=1,
+                    help='y point for spline transform')
+parser.add_argument('--spline_y2', type=float, default=1,
+                    help='y point for spline transform')
+parser.add_argument('--spline_y3', type=float, default=1,
+                    help='y point for spline transform')
 parser.add_argument('--staleness', type=int, default=2,
                     help='Number of epochs to use stale losses for fp_selector')
 parser.add_argument('--lr_sched', default=None,
@@ -228,7 +234,6 @@ if not os.path.exists(args.output_dir):
     os.makedirs(args.output_dir)
 
 #csv_logger = CSVLogger(args=args, fieldnames=['epoch', 'train_acc', 'test_acc'], filename=filename)
-
 sb = SelectiveBackpropper(cnn,
                           cnn_optimizer,
                           args.prob_pow,
@@ -241,7 +246,10 @@ sb = SelectiveBackpropper(cnn,
                           args.kath_oversampling_rate,
                           args.calculator,
                           args.fp_selector,
-                          args.staleness)
+                          args.staleness,
+                          args.spline_y1,
+                          args.spline_y2,
+                          args.spline_y3)
 
 def test_sb(loader, epoch, sb):
     cnn.eval()    # Change model to 'eval' mode (BN uses moving mean/var).
